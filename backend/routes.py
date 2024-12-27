@@ -1,4 +1,4 @@
-from backend.app import app
+from app import app
 from datetime import datetime
 from flask import jsonify, request
 import pandas as pd
