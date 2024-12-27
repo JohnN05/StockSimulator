@@ -1,1 +1,4 @@
 backend/__pycache__/routes.cpython-312.pyc
+backend/__pycache__/app.cpython-312.pyc
+backend/__pycache__/models.cpython-312.pyc
+backend/instance/site.db
