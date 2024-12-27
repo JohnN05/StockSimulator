@@ -1,9 +1,7 @@
-from __main__ import app
 from flask import request, jsonify
 from datetime import datetime, timedelta
 import yfinance as yf
 
-@app.route("/search")
 def search():
     ticker_symbol = request.args.get('ticker')
     date_str = request.args.get('date')  # expected format is YYYY-MM-DD
@@ -32,3 +30,6 @@ def search():
         return jsonify({"data": stock_info})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+def portfolio():
+    return
