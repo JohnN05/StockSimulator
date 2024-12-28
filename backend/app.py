@@ -13,5 +13,8 @@ app.add_url_rule('/search', view_func=routes.search)
 
 
 
+# Import routes after app is created
+from routes import *
+
 if __name__ == '__main__':
     app.run(debug=True)
