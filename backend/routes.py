@@ -28,9 +28,36 @@ def search():
 
         stock_info = data.iloc[0].to_dict()
         stock_info["Date"] = date.strftime('%Y-%m-%d')
-        return jsonify({"data": stock_info})
+        return jsonify(stock_info)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+def get_user():
+    username = request.args.get('username')
+
+    if not username:
+        return jsonify({'error':'Username is required'}), 400
+    
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({'error':'User not found'}), 404
+    
+    user_data = {
+        'username' : user.username,
+        'portfolios' : [{
+            'balance' : portfolio.balance,
+            'last_accessed' : portfolio.last_accessed,
+            'transactions' : [{
+                'ticker' : transaction.ticker,
+                'date' : transaction.date,
+                'type' : transaction.trans_type,
+                'amount' : transaction.amount
+            }for transaction in portfolio.transactions]
+        }for portfolio in user.portfolios]
+    }
+    return jsonify(user_data)
+
     
 def create_user():
     username = request.args.get('username')
