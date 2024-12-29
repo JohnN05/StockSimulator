@@ -601,10 +601,7 @@ function AccountPage() {
             onChange={(e) => setHoldingsDate(e.target.value)}
             size="small"
             sx={{ width: 150 }}
-          />
-          <Button variant="contained" size="small">
-            Submit
-          </Button>
+          />       
         </Box>
 
         {/* Holdings Table with Sort */}
