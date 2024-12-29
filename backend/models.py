@@ -11,6 +11,7 @@ class User(db.Model):
     password = db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
     portfolios = db.relationship('Portfolio', backref='account')
+    trades = db.relationship('Trade', backref='user', lazy=True)
 
     def __repr__(self):
         return f"User('{self.username}', {self.date_created})"
@@ -36,3 +37,13 @@ class Transaction(db.Model):
 
     def __repr__(self):
         return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.trans_type}, {self.amount})"
+
+class Trade(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(10), nullable=False)
+    shares = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    order_type = db.Column(db.String(4), nullable=False)  # 'buy' or 'sell'
+    total_amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

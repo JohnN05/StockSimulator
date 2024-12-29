@@ -1,7 +1,20 @@
 from flask import request, jsonify
 from datetime import datetime, timedelta
-from models import db, User, Portfolio, Transaction
+from models import db, User, Portfolio, Transaction, Trade
 import yfinance as yf
+
+def get_account_summary():
+    try:
+        # Mock data for now - this would normally come from the database
+        return jsonify({
+            'totalPortfolioValue': 1505.00,
+            'availableCash': 10000.00,
+            'totalReturn': 105.00,
+            'dayGain': 10.30,
+            'dayGainPercent': 0.68
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def search():
     ticker_symbol = request.args.get('ticker')
@@ -74,5 +87,32 @@ def create_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+def execute_trade():
+    data = request.json
+    trade = Trade(
+        symbol=data['symbol'],
+        shares=data['shares'],
+        price=data['price'],
+        order_type=data['orderType'],
+        total_amount=data['totalAmount'],
+        date=datetime.strptime(data['date'], '%Y-%m-%d'),
+        user_id=data['userId']
+    )
+    db.session.add(trade)
+    db.session.commit()
+    return jsonify({"success": True})
+
+def get_trade_history():
+    user_id = request.args.get('userId')
+    trades = Trade.query.filter_by(user_id=user_id).order_by(Trade.date.desc()).all()
+    return jsonify([{
+        'symbol': t.symbol,
+        'shares': t.shares,
+        'price': t.price,
+        'orderType': t.order_type,
+        'totalAmount': t.total_amount,
+        'date': t.date.strftime('%Y-%m-%d')
+    } for t in trades])
+
 def portfolio():
     return
