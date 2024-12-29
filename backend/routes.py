@@ -1,10 +1,11 @@
 from flask import request, jsonify
 from datetime import datetime, timedelta
+from models import db, User, Portfolio, Transaction
 import yfinance as yf
 
 def search():
     ticker_symbol = request.args.get('ticker')
-    date_str = request.args.get('date')  # expected format is YYYY-MM-DD
+    date_str = request.args.get('date')  # expected format: YYYY-MM-DD
 
     if not ticker_symbol:
         return jsonify({"error": "Ticker parameter is required"}), 400
@@ -27,7 +28,49 @@ def search():
 
         stock_info = data.iloc[0].to_dict()
         stock_info["Date"] = date.strftime('%Y-%m-%d')
-        return jsonify({"data": stock_info})
+        return jsonify(stock_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+def get_user():
+    username = request.args.get('username')
+
+    if not username:
+        return jsonify({'error':'Username is required'}), 400
+    
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({'error':'User not found'}), 404
+    
+    user_data = {
+        'username' : user.username,
+        'portfolios' : [{
+            'balance' : portfolio.balance,
+            'last_accessed' : portfolio.last_accessed,
+            'transactions' : [{
+                'ticker' : transaction.ticker,
+                'date' : transaction.date,
+                'type' : transaction.trans_type,
+                'amount' : transaction.amount
+            }for transaction in portfolio.transactions]
+        }for portfolio in user.portfolios]
+    }
+    return jsonify(user_data)
+
+    
+def create_user():
+    username = request.args.get('username')
+    password = request.args.get('password')
+
+    if not username or not password:
+        return jsonify({'error':'Username and password are required.'}), 400
+    
+    try:
+        new_user = User(username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message':f'{username} has been successfully added.'})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     

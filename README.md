@@ -27,7 +27,11 @@ npm run dev
 
 Backend:
 - Navigate to ...\StockSimulator\backend
-- Run the following command:
+- Initialize the database:
+```
+python init_db.py
+```
+- Start the flask server:
 ```
 python app.py
 ```
