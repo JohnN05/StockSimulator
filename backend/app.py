@@ -14,7 +14,7 @@ db.init_app(app)
 app.add_url_rule('/api/search', view_func=routes.search)
 app.add_url_rule('/api/user', view_func=routes.get_user)
 app.add_url_rule('/api/user/create', view_func=routes.create_user, methods=['GET','POST'])
-app.add_url_rule('/api/trade', view_func=routes.execute_trade, methods=['POST'])
+app.add_url_rule('/api/trade', view_func=routes.execute_transaction, methods=['POST'])
 app.add_url_rule('/api/history', view_func=routes.get_trade_history, methods=['GET'])
 app.add_url_rule('/api/account/summary', view_func=routes.get_account_summary, methods=['GET'])
 

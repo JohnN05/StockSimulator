@@ -1,6 +1,8 @@
 from flask import request, jsonify
 from datetime import datetime, timedelta
-from models import db, User, Portfolio, Transaction, Trade
+
+from sqlalchemy import func, case
+from models import db, User, Portfolio, Transaction
 import yfinance as yf
 
 def get_account_summary():
@@ -87,20 +89,60 @@ def create_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-def execute_trade():
+def execute_transaction():
     data = request.json
-    trade = Trade(
-        symbol=data['symbol'],
-        shares=data['shares'],
-        price=data['price'],
-        order_type=data['orderType'],
-        total_amount=data['totalAmount'],
-        date=datetime.strptime(data['date'], '%Y-%m-%d'),
-        user_id=data['userId']
+    required_fields = ['portfolioId', 'ticker', 'date', 'type', 'price', 'shares']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': 'Missing field: ' + field}), 400
+
+    try:
+        portfolio_id = int(data['portfolioId'])
+        ticker = str(data['ticker'])
+        date = datetime.strptime(data['date'], '%Y-%m-%d')
+        trans_type = str(data['type'])
+        if trans_type not in ['buy', 'sell']:
+            return jsonify({'error': 'Type must be either buy or sell'}), 400
+        price = float(data['price'])
+        shares = int(data['shares'])
+        total_amount = price*shares
+
+    except ValueError as e:
+        return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+
+    portfolio = Portfolio.query.get(portfolio_id)
+    if not portfolio:
+        return jsonify({'error': 'Portfolio not found'}), 404
+    
+    if trans_type == 'buy':
+        if portfolio.balance < total_amount:
+            return jsonify({'error': 'Insufficient funds'}), 400
+        portfolio.balance -= total_amount
+    else:
+        net_shares = db.session.query(
+            func.sum(
+                case([(Transaction.trans_type == 'buy', Transaction.shares)], 
+                     else_=-Transaction.shares)
+            )
+        ).filter_by(portfolio_id=portfolio_id, ticker=ticker).scalar() or 0
+        if shares > net_shares:
+            return jsonify({'error': 'Insufficient shares'}), 400
+        portfolio.balance += total_amount
+
+
+    transaction = Transaction(
+        portfolio_id = portfolio_id,
+        ticker = ticker,
+        date = date,
+        trans_type = trans_type,
+        price = price,
+        shares = shares,
+        total_amount = total_amount
     )
-    db.session.add(trade)
+
+    db.session.add(transaction)
     db.session.commit()
-    return jsonify({"success": True})
+    return jsonify({"message": 'Transaction has been processed'}), 200
 
 def get_trade_history():
     user_id = request.args.get('userId')

@@ -29,21 +29,13 @@ class Portfolio(db.Model):
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    portfolio = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
+    portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
     ticker = db.Column(db.String(5), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
     trans_type = db.Column(db.Enum('buy','sell',name='trans_type_enum'), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    shares = db.Column(db.Integer, nullable=False)
+    total_amount = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
         return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.trans_type}, {self.amount})"
-
-class Trade(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    symbol = db.Column(db.String(10), nullable=False)
-    shares = db.Column(db.Integer, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    order_type = db.Column(db.String(4), nullable=False)  # 'buy' or 'sell'
-    total_amount = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
