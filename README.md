@@ -52,11 +52,15 @@ pip install -r requirements.txt
 cd frontend
 ```
 
-2. Start the development server:
+2. Build the frontend (required for production/backend serving):
+```bash
+npm run build
+```
+
+3. (Optional) Start the development server for live development:
 ```bash
 npm run dev
 ```
-The frontend will be available at http://localhost:5173
 
 ### Start the Backend
 1. Navigate to the backend directory:
@@ -73,7 +77,8 @@ python init_db.py
 ```bash
 python app.py
 ```
-The backend API will be available at http://localhost:5000
+
+Note: The backend serves the frontend from the `dist` directory, so make sure to run `npm run build` in the frontend directory before starting the backend server.
 
 ## Features
 - Real-time stock data visualization
