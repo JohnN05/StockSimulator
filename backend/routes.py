@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import func, case
 from models import db, User, Portfolio, Transaction
+import utils
 import yfinance as yf
 
 def get_account_summary():
@@ -150,12 +151,7 @@ def execute_transaction():
             return jsonify({'error': 'Insufficient funds'}), 400
         portfolio.balance -= total_amount
     else:
-        net_shares = db.session.query(
-            func.sum(
-                case([(Transaction.trans_type == 'buy', Transaction.shares)], 
-                     else_=-Transaction.shares)
-            )
-        ).filter_by(portfolio_id=portfolio_id, ticker=ticker).scalar() or 0
+        net_shares = utils.count_shares(portfolio_id, ticker)
         if shares > net_shares:
             return jsonify({'error': 'Insufficient shares'}), 400
         portfolio.balance += total_amount
