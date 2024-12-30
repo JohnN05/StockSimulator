@@ -11,7 +11,6 @@ class User(db.Model):
     password = db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
     portfolios = db.relationship('Portfolio', backref='account')
-    trades = db.relationship('Trade', backref='user', lazy=True)
 
     def __repr__(self):
         return f"User('{self.username}', {self.date_created})"
@@ -19,13 +18,13 @@ class User(db.Model):
 
 class Portfolio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(20), db.ForeignKey('user.username'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     balance = db.Column(db.Integer, nullable=False, default=STARTING_BALANCE)
     transactions = db.relationship('Transaction', backref='originator')
     last_accessed = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
 
     def __repr__(self):
-        return f"Portfolio('{self.user_id}', {self.balance}, {self.last_accessed})"
+        return f"Portfolio('{self.account.username}', {self.balance}, {self.last_accessed})"
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,4 +37,4 @@ class Transaction(db.Model):
     total_amount = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.trans_type}, {self.amount})"
+        return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.trans_type}, {self.total_amount})"
