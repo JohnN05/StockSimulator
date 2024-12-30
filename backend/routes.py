@@ -16,7 +16,7 @@ def get_account_summary():
             'dayGainPercent': 0.68
         })
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to create portfolio for {username}: {str(e)}"}), 500
 
 def search():
     ticker_symbol = request.args.get('ticker')
@@ -45,13 +45,12 @@ def search():
         stock_info["Date"] = date.strftime('%Y-%m-%d')
         return jsonify(stock_info)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to create portfolio for {username}: {str(e)}"}), 500
     
 def get_user():
     username = request.args.get('username')
-
     if not username:
-        return jsonify({'error':'Username is required'}), 400
+        return jsonify({'error': 'Username is required'}), 400
     
     user = User.query.filter_by(username=username).first()
 
@@ -61,13 +60,17 @@ def get_user():
     user_data = {
         'username' : user.username,
         'portfolios' : [{
+            'id' : portfolio.id,
             'balance' : portfolio.balance,
             'last_accessed' : portfolio.last_accessed,
             'transactions' : [{
+                'id' : transaction.id,
                 'ticker' : transaction.ticker,
                 'date' : transaction.date,
                 'type' : transaction.trans_type,
-                'amount' : transaction.amount
+                'price' : transaction.price,
+                'shares' : transaction.shares,
+                'total' : transaction.total_amount
             }for transaction in portfolio.transactions]
         }for portfolio in user.portfolios]
     }
@@ -88,6 +91,34 @@ def create_user():
         return jsonify({'message':f'{username} has been successfully added.'})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+def create_portfolio():
+    username = request.args.get('username')
+    balance_str = request.args.get('balance')
+
+    if not username:
+        return jsonify({'error': 'Username parameter is required'}), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error':'User not found'}), 404
+
+    if balance_str:
+        try:
+            balance = float(balance_str)
+        except ValueError as e:
+            return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+        new_portfolio = Portfolio(user_id=user.id, balance=float(balance_str))
+    else:
+        new_portfolio = Portfolio(user_id=user.id)
+
+    try:
+        db.session.add(new_portfolio)
+        db.session.commit()
+        return jsonify({'message':f'Portfolio for {username} has been successfully added.'})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
     
 def execute_transaction():
     data = request.json
@@ -130,31 +161,36 @@ def execute_transaction():
         portfolio.balance += total_amount
 
 
-    transaction = Transaction(
-        portfolio_id = portfolio_id,
-        ticker = ticker,
-        date = date,
-        trans_type = trans_type,
-        price = price,
-        shares = shares,
-        total_amount = total_amount
-    )
+    try:
+        transaction = Transaction(
+            portfolio_id = portfolio_id,
+            ticker = ticker,
+            date = date,
+            trans_type = trans_type,
+            price = price,
+            shares = shares,
+            total_amount = total_amount
+        )
 
-    db.session.add(transaction)
-    db.session.commit()
+        db.session.add(transaction)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
     return jsonify({"message": 'Transaction has been processed'}), 200
 
-def get_trade_history():
-    user_id = request.args.get('userId')
-    trades = Trade.query.filter_by(user_id=user_id).order_by(Trade.date.desc()).all()
-    return jsonify([{
-        'symbol': t.symbol,
-        'shares': t.shares,
-        'price': t.price,
-        'orderType': t.order_type,
-        'totalAmount': t.total_amount,
-        'date': t.date.strftime('%Y-%m-%d')
-    } for t in trades])
+# def get_trade_history():
+#     user_id = request.args.get('userId')
+#     trades = Trade.query.filter_by(user_id=user_id).order_by(Trade.date.desc()).all()
+#     return jsonify([{
+#         'symbol': t.symbol,
+#         'shares': t.shares,
+#         'price': t.price,
+#         'orderType': t.order_type,
+#         'totalAmount': t.total_amount,
+#         'date': t.date.strftime('%Y-%m-%d')
+#     } for t in trades])
 
 def portfolio():
     return
