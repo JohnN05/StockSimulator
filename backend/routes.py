@@ -17,7 +17,7 @@ def get_account_summary():
             'dayGainPercent': 0.68
         })
     except Exception as e:
-        return jsonify({"error": f"Failed to create portfolio for {username}: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to retrieve data for ticker {ticker_symbol}: {str(e)}"}), 500
 
 def search():
     ticker_symbol = request.args.get('ticker')
@@ -46,8 +46,49 @@ def search():
         stock_info["Date"] = date.strftime('%Y-%m-%d')
         return jsonify(stock_info)
     except Exception as e:
-        return jsonify({"error": f"Failed to create portfolio for {username}: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to retrieve data for ticker {ticker_symbol}: {str(e)}"}), 500
     
+def get_points(ticker_symbol):
+    required_fields = ['start', 'end']
+    for field in required_fields: 
+        if field not in request.args: 
+            return jsonify({"error": f"{field} parameter is required"}), 400
+    
+    try:
+        start = datetime.strptime(request.args.get('start'), '%Y-%m-%d')
+        end = datetime.strptime(request.args.get('end'), '%Y-%m-%d')
+        if start >= end:
+            return jsonify({'error': 'Start date must be before end date'}), 400
+    except ValueError as e:
+        return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+    
+    try:
+        ticker = yf.Ticker(ticker_symbol)
+        ticker_data = ticker.history(start=start.strftime('%Y-%m-%d'), end=end.strftime('%Y-%m-%d'), interval='1d')
+        if ticker_data.empty:
+            return jsonify({"error": f"No data found for {ticker_symbol} at the given date range"}), 400
+    except Exception as e:
+        return jsonify({'error': f'Failed to retrieve data for ticker {ticker_symbol}: {str(e)}'}), 500
+
+    ticker_data.reset_index(inplace=True)
+    count_arg = request.args.get('count')
+    if count_arg:
+        total_points = ticker_data.shape[0]
+        try:
+            count = int(count_arg)
+            if count <= 0:
+                return jsonify({'error': 'Count must be greater than 0'}), 400
+            if total_points < count:
+                return jsonify({'error': f'Not enough data points for {ticker_symbol}'}), 400
+            step = max(1, total_points // count)
+            points = ticker_data.iloc[::step].head(count).to_dict(orient='records')
+        except ValueError as e:
+            return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+        
+        return jsonify(points)
+    else:
+        return jsonify(ticker_data.to_dict(orient='records'))
+
 def get_user():
     username = request.args.get('username')
     if not username:

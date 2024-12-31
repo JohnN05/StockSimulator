@@ -12,6 +12,7 @@ db.init_app(app)
 
 # API Routes
 app.add_url_rule('/api/search', view_func=routes.search)
+app.add_url_rule('/api/ticker/<ticker_symbol>', view_func=routes.get_points, methods=['GET'])
 app.add_url_rule('/api/user', view_func=routes.get_user)
 app.add_url_rule('/api/user/create', view_func=routes.create_user, methods=['GET','POST'])
 app.add_url_rule('/api/portfolio/create', view_func=routes.create_portfolio, methods=['GET','POST'])
