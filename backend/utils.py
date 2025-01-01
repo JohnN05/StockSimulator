@@ -10,3 +10,9 @@ def count_shares(portfolio_id, ticker):
             )
         ).filter_by(portfolio_id=portfolio_id, ticker=ticker).scalar() or 0
     return net_shares
+
+def verify_fields(args, required_fields):
+    for field in required_fields:
+        if field not in args:
+            return {'error': 'Missing field: ' + field}, 400
+    return {}, 200

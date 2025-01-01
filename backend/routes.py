@@ -50,9 +50,9 @@ def search():
     
 def get_points(ticker_symbol):
     required_fields = ['start', 'end']
-    for field in required_fields: 
-        if field not in request.args: 
-            return jsonify({"error": f"{field} parameter is required"}), 400
+    error, status = utils.verify_fields(request.args, required_fields)
+    if error:
+        return jsonify(error), status
     
     try:
         start = datetime.strptime(request.args.get('start'), '%Y-%m-%d')
@@ -119,11 +119,14 @@ def get_user(username):
 
     
 def create_user():
-    username = request.args.get('username')
-    password = request.args.get('password')
-
-    if not username or not password:
-        return jsonify({'error':'Username and password are required.'}), 400
+    required_fields = ['username', 'password']
+    data=request.json
+    error, status = utils.verify_fields(data, required_fields)
+    if error:
+        return jsonify(error), status
+    
+    username = data['username']
+    password = data['password']
     
     try:
         new_user = User(username=username, password=password)
@@ -134,16 +137,18 @@ def create_user():
         return jsonify({"error": str(e)}), 500
     
 def create_portfolio():
-    username = request.args.get('username')
-    balance_str = request.args.get('balance')
+    required_fields = ['username']
+    data = request.json
+    error, status = utils.verify_fields(data, required_fields)
+    if error:
+        return jsonify(error), status
 
-    if not username:
-        return jsonify({'error': 'Username parameter is required'}), 400
-
+    username = data['username']
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({'error':'User not found'}), 404
 
+    balance_str = data['balance']
     if balance_str:
         try:
             balance = float(balance_str)
@@ -162,11 +167,12 @@ def create_portfolio():
 
     
 def execute_transaction():
-    data = request.json
     required_fields = ['portfolioId', 'ticker', 'date', 'type', 'price', 'shares']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': 'Missing field: ' + field}), 400
+    data = request.json
+
+    error, status = utils.verify_fields(data, required_fields)
+    if error:
+        return jsonify(error), status
 
     try:
         portfolio_id = int(data['portfolioId'])
@@ -195,7 +201,6 @@ def execute_transaction():
         if shares > net_shares:
             return jsonify({'error': 'Insufficient shares'}), 400
         portfolio.balance += total_amount
-
 
     try:
         transaction = Transaction(
