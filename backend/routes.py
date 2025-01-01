@@ -20,12 +20,13 @@ def get_account_summary():
         return jsonify({"error": f"Failed to retrieve data for ticker {ticker_symbol}: {str(e)}"}), 500
 
 def search():
+    required_fields = ['ticker']
+    error, status = utils.verify_fields(request.args, required_fields)
+    if error:
+        return jsonify(error), status
+    
     ticker_symbol = request.args.get('ticker')
     date_str = request.args.get('date')  # expected format: YYYY-MM-DD
-
-    if not ticker_symbol:
-        return jsonify({"error": "Ticker parameter is required"}), 400
-
     if not date_str:
         date = datetime.today()
     else:
@@ -61,7 +62,6 @@ def get_points(ticker_symbol):
             return jsonify({'error': 'Start date must be before end date'}), 400
     except ValueError as e:
         return jsonify({'error': f'Invalid value: {str(e)}'}), 400
-    
     try:
         ticker = yf.Ticker(ticker_symbol)
         ticker_data = ticker.history(start=start.strftime('%Y-%m-%d'), end=end.strftime('%Y-%m-%d'), interval='1d')
@@ -116,7 +116,6 @@ def get_user(username):
         }for portfolio in user.portfolios]
     }
     return jsonify(user_data)
-
     
 def create_user():
     required_fields = ['username', 'password']
@@ -221,17 +220,26 @@ def execute_transaction():
 
     return jsonify({"message": 'Transaction has been processed'}), 200
 
-# def get_trade_history():
-#     user_id = request.args.get('userId')
-#     trades = Trade.query.filter_by(user_id=user_id).order_by(Trade.date.desc()).all()
-#     return jsonify([{
-#         'symbol': t.symbol,
-#         'shares': t.shares,
-#         'price': t.price,
-#         'orderType': t.order_type,
-#         'totalAmount': t.total_amount,
-#         'date': t.date.strftime('%Y-%m-%d')
-#     } for t in trades])
-
-def portfolio():
-    return
+def get_transaction_history():
+    required_fields = ['portfolioId']
+    error, status = utils.verify_fields(request.args, required_fields)
+    if error:
+        return jsonify(error), status
+    try:
+        portfolio_id = int(request.args.get('portfolioId'))
+    except ValueError as e:
+        return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+    
+    ticker = request.args.get('ticker')
+    if ticker:
+        transactions = Transaction.query.filter_by(portfolio_id=portfolio_id).filter_by(ticker=ticker).order_by(Transaction.date.desc()).all()
+    else:
+        transactions = Transaction.query.filter_by(portfolio_id=portfolio_id).order_by(Transaction.date.desc()).all()
+    return jsonify([{
+        'ticker': t.ticker,
+        'shares': t.shares,
+        'price': t.price,
+        'type': t.trans_type,
+        'totalAmount': t.total_amount,
+        'date': t.date.strftime('%Y-%m-%d')
+    } for t in transactions])

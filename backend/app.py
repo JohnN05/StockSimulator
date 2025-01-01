@@ -17,7 +17,7 @@ app.add_url_rule('/api/user/<username>', view_func=routes.get_user)
 app.add_url_rule('/api/user/create', view_func=routes.create_user, methods=['POST'])
 app.add_url_rule('/api/portfolio/create', view_func=routes.create_portfolio, methods=['POST'])
 app.add_url_rule('/api/trade', view_func=routes.execute_transaction, methods=['POST'])
-# app.add_url_rule('/api/history', view_func=routes.get_trade_history, methods=['GET'])
+app.add_url_rule('/api/history', view_func=routes.get_transaction_history, methods=['GET'])
 app.add_url_rule('/api/account/summary', view_func=routes.get_account_summary, methods=['GET'])
 
 # Serve frontend static files
