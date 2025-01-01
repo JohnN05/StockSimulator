@@ -89,8 +89,7 @@ def get_points(ticker_symbol):
     else:
         return jsonify(ticker_data.to_dict(orient='records'))
 
-def get_user():
-    username = request.args.get('username')
+def get_user(username):
     if not username:
         return jsonify({'error': 'Username is required'}), 400
     
