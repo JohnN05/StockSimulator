@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { 
   Box, 
@@ -21,6 +21,8 @@ interface StockData {
   };
 }
 
+const BACKEND_URL = 'http://localhost:5002';
+
 const TradePage: React.FC = () => {
   const [tradeForm, setTradeForm] = useState({
     symbol: '',
@@ -33,14 +35,35 @@ const TradePage: React.FC = () => {
 
   const [searchForm, setSearchForm] = useState({
     symbol: '',
-    startDate: '',
-    endDate: ''
+    start: '',
+    end: ''
   });
 
   const [stockData, setStockData] = useState<StockData>({
     data: [],
     xAxis: { data: [] }
   });
+
+  const [dimensions, setDimensions] = useState({width: 0, height: 0});
+  const graphContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (graphContainerRef.current) {
+        setDimensions({
+          width: graphContainerRef.current.offsetWidth,
+          height: graphContainerRef.current.offsetHeight
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleTradeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,9 +81,13 @@ const TradePage: React.FC = () => {
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.get('/api/search', { params: searchForm });
-      const data = await response.json();
-      setStockData(data);
+      const {symbol, ...params} = searchForm;
+      const response = await axios.get(`${BACKEND_URL}/api/ticker/${symbol}`, { params: params });
+      const tempData: StockData = {
+        data: response.data.map((point: any) => point.Close),
+        xAxis: { data: response.data.map((d: any) => d.Date) }
+      };
+      setStockData(tempData);
     } catch (error) {
       console.error('Error searching stock:', error);
     }
@@ -155,8 +182,8 @@ const TradePage: React.FC = () => {
           variant="outlined"
           InputLabelProps={{ shrink: true }}
           sx={{ flex: 1 }}
-          value={searchForm.startDate}
-          onChange={e => setSearchForm({...searchForm, startDate: e.target.value})}
+          value={searchForm.start}
+          onChange={e => setSearchForm({...searchForm, start: e.target.value})}
         />
         <TextField
           label="End Date"
@@ -164,8 +191,8 @@ const TradePage: React.FC = () => {
           variant="outlined"
           InputLabelProps={{ shrink: true }}
           sx={{ flex: 1 }}
-          value={searchForm.endDate}
-          onChange={e => setSearchForm({...searchForm, endDate: e.target.value})}
+          value={searchForm.end}
+          onChange={e => setSearchForm({...searchForm, end: e.target.value})}
         />
         <Button 
           variant="contained" 
@@ -181,7 +208,7 @@ const TradePage: React.FC = () => {
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Typography variant="h6">
-            Company Name (TICKER)
+            {stockData.data.length > 0 ? searchForm.symbol : "Company Name (TICKER)"}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -200,13 +227,13 @@ const TradePage: React.FC = () => {
         </Box>
         
         {/* Stock Price Chart */}
-        <Box sx={{ width: '100%', height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box ref={graphContainerRef} sx={{ width: '100%', height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {stockData.data.length > 0 ? (
             <LineChart
               xAxis={[{ data: stockData.xAxis.data, scaleType: 'point' }]}
               series={[{ data: stockData.data, area: true }]}
-              height="100%"
-              width="100%"
+              height={dimensions.height}
+              width={dimensions.width}
             />
           ) : (
             <Typography variant="body1" color="textSecondary">
