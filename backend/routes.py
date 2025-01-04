@@ -1,10 +1,13 @@
 from flask import request, jsonify
 from datetime import datetime, timedelta
 
+import numpy as np
 from sqlalchemy import func, case
 from models import db, User, Portfolio, Transaction
 import utils
 import yfinance as yf
+
+DEFAULT_POINTS = 100
 
 def get_account_summary():
     try:
@@ -72,22 +75,22 @@ def get_points(ticker_symbol):
 
     ticker_data.reset_index(inplace=True)
     count_arg = request.args.get('count')
-    if count_arg:
-        total_points = ticker_data.shape[0]
-        try:
-            count = int(count_arg)
-            if count <= 0:
-                return jsonify({'error': 'Count must be greater than 0'}), 400
-            if total_points < count:
-                return jsonify({'error': f'Not enough data points for {ticker_symbol}'}), 400
-            step = max(1, total_points // count)
-            points = ticker_data.iloc[::step].head(count).to_dict(orient='records')
-        except ValueError as e:
-            return jsonify({'error': f'Invalid value: {str(e)}'}), 400
-        
-        return jsonify(points)
-    else:
-        return jsonify(ticker_data.to_dict(orient='records'))
+    if not count_arg:
+        count_arg = min(DEFAULT_POINTS, ticker_data.shape[0])
+    total_points = ticker_data.shape[0]
+    try:
+        count = int(count_arg)
+        if count <= 0:
+            return jsonify({'error': 'Count must be greater than 0'}), 400
+        if total_points < count:
+            return jsonify({'error': f'Not enough data points for {ticker_symbol}'}), 400
+        indices = np.linspace(0, total_points - 1, count).astype(int)
+        points = ticker_data.iloc[indices].to_dict(orient='records')
+    except ValueError as e:
+        return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+    
+    return jsonify(points)
+
 
 def get_user(username):
     if not username:
