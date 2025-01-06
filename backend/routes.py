@@ -119,6 +119,42 @@ def get_user(username):
         }for portfolio in user.portfolios]
     }
     return jsonify(user_data)
+
+def login():
+    required_fields = ['username', 'password']
+    data = request.json
+
+    error, status = utils.verify_fields(data, required_fields)
+    if error:
+        return jsonify(error), status
+    username = data['username']
+    password = data['password']
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if user.password != password:
+        return jsonify({'error': 'Incorrect password'}), 401
+    
+    token = utils.generate_token(username)
+    user_data = {
+        'username' : user.username,
+        'portfolios' : [{
+            'id' : portfolio.id,
+            'balance' : portfolio.balance,
+            'last_accessed' : portfolio.last_accessed,
+            'transactions' : [{
+                'id' : transaction.id,
+                'ticker' : transaction.ticker,
+                'date' : transaction.date,
+                'type' : transaction.trans_type,
+                'price' : transaction.price,
+                'shares' : transaction.shares,
+                'total' : transaction.total_amount
+            }for transaction in portfolio.transactions]
+        }for portfolio in user.portfolios]
+    }
+    return jsonify({'token': token, 'user': user_data})
     
 def create_user():
     required_fields = ['username', 'password']

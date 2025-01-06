@@ -2,11 +2,13 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
 import TradePage from './pages/TradePage';
 import AccountPage from './pages/AccountPage';
-import DashboardPage from './pages/DashboardPage';
 import { useState } from 'react';
+import UserContext from './UserContext';
+import SignupPage from './pages/SignupPage';
+import SigninPage from './pages/SigninPage';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'account' | 'trade'>('account');
+  const [currentPage, setCurrentPage] = useState<'account' | 'trade' | 'signin' | 'signup'>('account');
 
   return (
     <Router>
@@ -47,6 +49,36 @@ function App() {
                   Trade
                 </Button>
               </Link>
+              <Link to="/signup" style={{ textDecoration: 'none' }}>
+                <Button 
+                  color="inherit" 
+                  onClick={() => setCurrentPage('signup')}
+                  sx={{ 
+                    textTransform: 'none',
+                    fontWeight: currentPage === 'signup' ? 'bold' : 'normal',
+                    borderBottom: currentPage === 'signup' ? '2px solid white' : 'none',
+                    borderRadius: 0,
+                    color: 'white'
+                  }}
+                >
+                  Sign Up
+                </Button>
+              </Link>
+              <Link to="/signin" style={{ textDecoration: 'none' }}>
+                <Button 
+                  color="inherit" 
+                  onClick={() => setCurrentPage('signin')}
+                  sx={{ 
+                    textTransform: 'none',
+                    fontWeight: currentPage === 'signin' ? 'bold' : 'normal',
+                    borderBottom: currentPage === 'signin' ? '2px solid white' : 'none',
+                    borderRadius: 0,
+                    color: 'white'
+                  }}
+                >
+                  Sign In
+                </Button>
+              </Link>
             </Box>
           </Toolbar>
         </AppBar>
@@ -56,6 +88,8 @@ function App() {
             <Route path="/" element={<AccountPage />} />
             <Route path="/account" element={<AccountPage />} />
             <Route path="/trade" element={<TradePage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/signin" element={<SigninPage />} />
           </Routes>
         </Box>
       </Box>
