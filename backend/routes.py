@@ -175,13 +175,14 @@ def create_user():
         return jsonify({"error": str(e)}), 500
     
 def create_portfolio():
-    required_fields = ['username']
+    required_fields = ['username', 'name']
     data = request.json
     error, status = utils.verify_fields(data, required_fields)
     if error:
         return jsonify(error), status
 
     username = data['username']
+    name = data['name']
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({'error':'User not found'}), 404
@@ -192,7 +193,7 @@ def create_portfolio():
             balance = float(balance_str)
         except ValueError as e:
             return jsonify({'error': f'Invalid value: {str(e)}'}), 400
-        new_portfolio = Portfolio(user_id=user.id, balance=float(balance_str))
+        new_portfolio = Portfolio(user_id=user.id, name=name, balance=float(balance_str))
     else:
         new_portfolio = Portfolio(user_id=user.id)
 

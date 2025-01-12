@@ -8,6 +8,7 @@ export interface User {
 
 export interface Portfolio {
     id: number;
+    name: string;
     balance: number;
     last_accessed: Date;
     transactions: Transaction[];

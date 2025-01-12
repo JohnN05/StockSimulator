@@ -18,6 +18,7 @@ class User(db.Model):
 
 class Portfolio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(20), nullable=False, unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     balance = db.Column(db.Integer, nullable=False, default=STARTING_BALANCE)
     transactions = db.relationship('Transaction', backref='originator')
