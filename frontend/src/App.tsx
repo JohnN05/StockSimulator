@@ -3,9 +3,9 @@ import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
 import TradePage from './pages/TradePage';
 import AccountPage from './pages/AccountPage';
 import { useState } from 'react';
-import UserContext from './UserContext';
 import SignupPage from './pages/SignupPage';
 import SigninPage from './pages/SigninPage';
+import NewAccountPage from './pages/NewAccountPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'account' | 'trade' | 'signin' | 'signup'>('account');
@@ -85,8 +85,8 @@ function App() {
 
         <Box sx={{ p: 2, px: { xs: 4, sm: 6, md: 8, lg: 12 } }}>
           <Routes>
-            <Route path="/" element={<AccountPage />} />
-            <Route path="/account" element={<AccountPage />} />
+            <Route path="/" element={<NewAccountPage />} />
+            <Route path="/account" element={<NewAccountPage />} />
             <Route path="/trade" element={<TradePage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/signin" element={<SigninPage />} />
