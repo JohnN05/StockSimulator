@@ -3,7 +3,7 @@ from app import app
 from models import db, User, Portfolio, Transaction
 
 def create_database():
-    if not os.path.exists('instance/site.db'):
+    if not os.path.exists('instance/app.db'):
         os.makedirs('instance', exist_ok=True) 
         open('instance/app.db', 'w').close() 
         print("Database file created.")
