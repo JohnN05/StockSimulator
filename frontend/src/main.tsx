@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import './index.css';
+import { UserProvider } from './UserContext';
 
 const theme = createTheme({
   palette: {
@@ -48,8 +49,10 @@ if (!root) throw new Error('Root element not found');
 createRoot(root).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
+      <UserProvider>
+        <CssBaseline />
+        <App />
+      </UserProvider>
     </ThemeProvider>
   </StrictMode>
 );

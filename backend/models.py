@@ -18,21 +18,23 @@ class User(db.Model):
 
 class Portfolio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(20), db.ForeignKey('user.username'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     balance = db.Column(db.Integer, nullable=False, default=STARTING_BALANCE)
     transactions = db.relationship('Transaction', backref='originator')
     last_accessed = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
 
     def __repr__(self):
-        return f"Portfolio('{self.user_id}', {self.balance}, {self.last_accessed})"
+        return f"Portfolio('{self.account.username}', {self.balance}, {self.last_accessed})"
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    portfolio = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
+    portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
     ticker = db.Column(db.String(5), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
     trans_type = db.Column(db.Enum('buy','sell',name='trans_type_enum'), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    shares = db.Column(db.Integer, nullable=False)
+    total_amount = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.trans_type}, {self.amount})"
+        return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.trans_type}, {self.total_amount})"

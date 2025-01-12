@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import axios from 'axios';
 import { 
   Box, 
   Button, 
@@ -6,7 +7,10 @@ import {
   TextField, 
   Paper, 
   Typography, 
-  MenuItem 
+  MenuItem, 
+  FormControl, 
+  InputLabel, 
+  Select 
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts';
 
@@ -17,121 +21,186 @@ interface StockData {
   };
 }
 
-function TradePage() {
+const BACKEND_URL = 'http://localhost:5002';
+
+const TradePage: React.FC = () => {
+  const [tradeForm, setTradeForm] = useState({
+    symbol: '',
+    date: '',
+    option: '',
+    orderType: '',
+    shares: '',
+    totalAmount: ''
+  });
+
+  const [searchForm, setSearchForm] = useState({
+    symbol: '',
+    start: '',
+    end: ''
+  });
+
   const [stockData, setStockData] = useState<StockData>({
     data: [],
     xAxis: { data: [] }
   });
 
-  const [formData, setFormData] = useState({
-    ticker: '',
-    date: '',
-    option: '',
-    orderType: '',
-    shares: '',
-    total: ''
-  });
+  const [dimensions, setDimensions] = useState({width: 0, height: 0});
+  const graphContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
+  useEffect(() => {
+    const handleResize = () => {
+      if (graphContainerRef.current) {
+        setDimensions({
+          width: graphContainerRef.current.offsetWidth,
+          height: graphContainerRef.current.offsetHeight
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const handleTradeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await axios.post('/api/trade', {
+        ...tradeForm,
+        userId: 1 // Replace with actual user ID
+      });
+      // Reset form or show success message
+    } catch (error) {
+      console.error('Error executing trade:', error);
+    }
   };
 
-  const handleSubmit = async () => {
+  const handleSearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`/api/search?ticker=${formData.ticker}&date=${formData.date}`);
-      const data = await response.json();
-      console.log(data);
+      const {symbol, ...params} = searchForm;
+      const response = await axios.get(`${BACKEND_URL}/api/ticker/${symbol}`, { params: params });
+      const tempData: StockData = {
+        data: response.data.map((point: any) => point.Close),
+        xAxis: { data: response.data.map((d: any) => d.Date) }
+      };
+      setStockData(tempData);
     } catch (error) {
-      console.error('Error fetching stock data:', error);
+      console.error('Error searching stock:', error);
     }
   };
 
   return (
     <Box>
-      {/* Search Section */}
+      {/* Trade Form */}
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
         <TextField 
           label="Search Ticker Symbol"
+          placeholder="Enter symbol..."
           variant="outlined"
-          value={formData.ticker}
-          onChange={handleInputChange('ticker')}
-          sx={{ flex: 2 }}
+          value={tradeForm.symbol}
+          onChange={e => setTradeForm({...tradeForm, symbol: e.target.value})}
+          sx={{ flex: 1 }}
         />
         <TextField
           label="Date"
           type="date"
           variant="outlined"
-          value={formData.date}
-          onChange={handleInputChange('date')}
           InputLabelProps={{ shrink: true }}
           sx={{ flex: 1 }}
+          value={tradeForm.date}
+          onChange={e => setTradeForm({...tradeForm, date: e.target.value})}
         />
-        <Button 
-          variant="contained" 
-          color="primary"
-          onClick={handleSubmit}
-          sx={{ minWidth: '120px' }}
-        >
-          Submit
-        </Button>
+        <FormControl sx={{ flex: 1 }}>
+          <InputLabel>Option</InputLabel>
+          <Select
+            label="Option"
+            value={tradeForm.option}
+            onChange={e => setTradeForm({...tradeForm, option: e.target.value})}
+          >
+            <MenuItem value="">Select Option</MenuItem>
+            <MenuItem value="buy">Buy Stock</MenuItem>
+            <MenuItem value="sell">Sell Stock</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl sx={{ flex: 1 }}>
+          <InputLabel>Order Type</InputLabel>
+          <Select
+            label="Order Type"
+            value={tradeForm.orderType}
+            onChange={e => setTradeForm({...tradeForm, orderType: e.target.value})}
+          >
+            <MenuItem value="">Select Order Type</MenuItem>
+            <MenuItem value="market">Market Price</MenuItem>
+            <MenuItem value="limit">Limit Order</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
-
-      {/* Trade Options Section */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <TextField
-          select
-          label="Option"
-          variant="outlined"
-          value={formData.option}
-          onChange={handleInputChange('option')}
-          fullWidth
-        >
-          <MenuItem value="">Select Option</MenuItem>
-          <MenuItem value="buy">Buy Stock</MenuItem>
-          <MenuItem value="sell">Sell Stock</MenuItem>
-        </TextField>
-        <TextField
-          select
-          label="Order Type"
-          variant="outlined"
-          value={formData.orderType}
-          onChange={handleInputChange('orderType')}
-          fullWidth
-        >
-          <MenuItem value="">Select Order Type</MenuItem>
-          <MenuItem value="market">Market Price</MenuItem>
-          <MenuItem value="limit">Limit Order</MenuItem>
-        </TextField>
-      </Box>
-
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
         <TextField
           label="# Shares"
           type="number"
           variant="outlined"
-          value={formData.shares}
-          onChange={handleInputChange('shares')}
+          value={tradeForm.shares}
+          onChange={e => setTradeForm({...tradeForm, shares: e.target.value})}
           sx={{ flex: 1 }}
         />
         <TextField
-          label="Total $$"
+          label="Total $"
           type="number"
           variant="outlined"
-          value={formData.total}
-          InputProps={{
-            readOnly: true,
-          }}
+          value={tradeForm.totalAmount}
+          onChange={e => setTradeForm({...tradeForm, totalAmount: e.target.value})}
           sx={{ flex: 1 }}
         />
         <Button 
           variant="contained" 
-          color="secondary"
+          color="primary"
+          onClick={handleTradeSubmit}
           sx={{ minWidth: '120px' }}
         >
           Confirm
+        </Button>
+      </Box>
+
+      {/* Stock Search Form */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+        <TextField 
+          label="Ticker Symbol"
+          placeholder="Enter symbol..."
+          variant="outlined"
+          value={searchForm.symbol}
+          onChange={e => setSearchForm({...searchForm, symbol: e.target.value})}
+          sx={{ flex: 1 }}
+        />
+        <TextField
+          label="Start Date"
+          type="date"
+          variant="outlined"
+          InputLabelProps={{ shrink: true }}
+          sx={{ flex: 1 }}
+          value={searchForm.start}
+          onChange={e => setSearchForm({...searchForm, start: e.target.value})}
+        />
+        <TextField
+          label="End Date"
+          type="date"
+          variant="outlined"
+          InputLabelProps={{ shrink: true }}
+          sx={{ flex: 1 }}
+          value={searchForm.end}
+          onChange={e => setSearchForm({...searchForm, end: e.target.value})}
+        />
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={handleSearchSubmit}
+          sx={{ flex: 1 }}
+        >
+          Search
         </Button>
       </Box>
 
@@ -139,22 +208,8 @@ function TradePage() {
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Typography variant="h6">
-            Company Name (TICKER)
+            {stockData.data.length > 0 ? searchForm.symbol : "Company Name (TICKER)"}
           </Typography>
-          <TextField
-            label="Start Date"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            sx={{ width: 150 }}
-          />
-          <TextField
-            label="End Date"
-            type="date"
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            sx={{ width: 150 }}
-          />
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <Typography variant="subtitle1">
@@ -172,13 +227,13 @@ function TradePage() {
         </Box>
         
         {/* Stock Price Chart */}
-        <Box sx={{ width: '100%', height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box ref={graphContainerRef} sx={{ width: '100%', height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {stockData.data.length > 0 ? (
             <LineChart
               xAxis={[{ data: stockData.xAxis.data, scaleType: 'point' }]}
               series={[{ data: stockData.data, area: true }]}
-              height="100%"
-              width="100%"
+              height={dimensions.height}
+              width={dimensions.width}
             />
           ) : (
             <Typography variant="body1" color="textSecondary">
@@ -189,6 +244,6 @@ function TradePage() {
       </Paper>
     </Box>
   );
-}
+};
 
 export default TradePage;
