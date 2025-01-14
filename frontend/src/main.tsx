@@ -5,6 +5,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import './index.css';
 import { UserProvider } from './UserContext';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 const theme = createTheme({
   palette: {
@@ -49,10 +51,13 @@ if (!root) throw new Error('Root element not found');
 createRoot(root).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
-      <UserProvider>
-        <CssBaseline />
-        <App />
-      </UserProvider>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <UserProvider>
+          <CssBaseline />
+          <App />
+        </UserProvider>
+      </LocalizationProvider>
+
     </ThemeProvider>
   </StrictMode>
 );
