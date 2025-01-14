@@ -141,6 +141,7 @@ def login():
         'username' : user.username,
         'portfolios' : [{
             'id' : portfolio.id,
+            'name' : portfolio.name,
             'balance' : portfolio.balance,
             'last_accessed' : portfolio.last_accessed,
             'transactions' : [{
@@ -203,7 +204,6 @@ def create_portfolio():
     try:
         db.session.add(new_portfolio)
         db.session.commit()
-        print(new_portfolio)
         response_portfolio = {
             'id': new_portfolio.id,
             'name': new_portfolio.name,
