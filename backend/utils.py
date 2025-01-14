@@ -13,6 +13,18 @@ def count_shares(portfolio_id, ticker):
         ).filter_by(portfolio_id=portfolio_id, ticker=ticker).scalar() or 0
     return net_shares
 
+def authenticate_header(auth_headers):
+    if 'Authorization' not in auth_headers:
+        raise Exception('Missing Authorization header')
+    auth_header = auth_headers['Authorization']
+    if not auth_header.startswith('Bearer '):
+        raise Exception('Invalid Authorization header')
+    token = auth_header.split(' ')[1]
+    payload = validate_token(token)
+    username = payload['sub']
+
+    return username
+
 def verify_fields(args, required_fields):
     for field in required_fields:
         if field not in args:
@@ -39,7 +51,7 @@ def validate_token(token):
         return payload
 
     except jwt.ExpiredSignatureError:
-        return {"error": "Token has expired"}
+        raise jwt.ExpiredSignatureError("Token has expired")
 
     except jwt.InvalidTokenError:
-        return {"error": "Invalid token"}
+        raise jwt.InvalidTokenError("Invalid token")

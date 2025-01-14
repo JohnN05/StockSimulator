@@ -175,32 +175,43 @@ def create_user():
         return jsonify({"error": str(e)}), 500
     
 def create_portfolio():
-    required_fields = ['username', 'name']
+    try:
+        username = utils.authenticate_header(request.headers)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 401
+
+    required_fields = ['name', 'balance']
     data = request.json
     error, status = utils.verify_fields(data, required_fields)
     if error:
         return jsonify(error), status
 
-    username = data['username']
     name = data['name']
+    try:
+        balance = float(data['balance'])
+    except ValueError as e:
+        return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+    if balance < 0:
+        return jsonify({'error': 'Balance must be a positive number'}), 400
+    
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({'error':'User not found'}), 404
-
-    balance_str = data['balance']
-    if balance_str:
-        try:
-            balance = float(balance_str)
-        except ValueError as e:
-            return jsonify({'error': f'Invalid value: {str(e)}'}), 400
-        new_portfolio = Portfolio(user_id=user.id, name=name, balance=float(balance_str))
-    else:
-        new_portfolio = Portfolio(user_id=user.id)
+    new_portfolio = Portfolio(user_id=user.id, name=name, balance=balance)
+    
 
     try:
         db.session.add(new_portfolio)
         db.session.commit()
-        return jsonify({'message':f'Portfolio for {username} has been successfully added.'})
+        print(new_portfolio)
+        response_portfolio = {
+            'id': new_portfolio.id,
+            'name': new_portfolio.name,
+            'balance': new_portfolio.balance,
+            'last_accessed': new_portfolio.last_accessed.isoformat(),
+            'transactions': []
+        }
+        return jsonify(response_portfolio), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

@@ -10,22 +10,22 @@ class User(db.Model):
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
-    portfolios = db.relationship('Portfolio', backref='account')
+    portfolios = db.relationship('Portfolio', backref='user')
 
     def __repr__(self):
-        return f"User('{self.username}', {self.date_created})"
+        return f"User('{self.id}, {self.username}', {self.date_created})"
 
 
 class Portfolio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20), nullable=False, unique=True)
+    name = db.Column(db.String(20), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    balance = db.Column(db.Integer, nullable=False, default=STARTING_BALANCE)
-    transactions = db.relationship('Transaction', backref='originator')
+    balance = db.Column(db.Float, nullable=False)
+    transactions = db.relationship('Transaction', backref='portfolio')
     last_accessed = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
 
     def __repr__(self):
-        return f"Portfolio('{self.account.username}', {self.balance}, {self.last_accessed})"
+        return f"Portfolio('{self.user.username}', {self.balance}, {self.last_accessed})"
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
