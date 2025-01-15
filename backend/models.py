@@ -22,6 +22,7 @@ class Portfolio(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     balance = db.Column(db.Float, nullable=False)
     transactions = db.relationship('Transaction', backref='portfolio')
+    date = db.Column(db.DateTime, nullable=False)
     last_accessed = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
 
     def __repr__(self):

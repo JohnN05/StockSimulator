@@ -143,6 +143,7 @@ def login():
             'id' : portfolio.id,
             'name' : portfolio.name,
             'balance' : portfolio.balance,
+            'date' : portfolio.date,
             'last_accessed' : portfolio.last_accessed,
             'transactions' : [{
                 'id' : transaction.id,
@@ -181,13 +182,14 @@ def create_portfolio():
     except Exception as e:
         return jsonify({'error': str(e)}), 401
 
-    required_fields = ['name', 'balance']
+    required_fields = ['name', 'balance', 'date']
     data = request.json
     error, status = utils.verify_fields(data, required_fields)
     if error:
         return jsonify(error), status
 
     name = data['name']
+    date = datetime.strptime(data['date'], '%Y-%m-%dT%H:%M:%S.%fZ')
     try:
         balance = float(data['balance'])
     except ValueError as e:
@@ -198,7 +200,7 @@ def create_portfolio():
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({'error':'User not found'}), 404
-    new_portfolio = Portfolio(user_id=user.id, name=name, balance=balance)
+    new_portfolio = Portfolio(user_id=user.id, name=name, balance=balance, date=date)
     
 
     try:
