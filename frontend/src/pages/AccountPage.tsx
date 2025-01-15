@@ -13,10 +13,12 @@ import {
     TextField,
     Typography
 } from "@mui/material";
+import { DatePicker } from '@mui/x-date-pickers';
 import { Portfolio } from "../types";
 import axios from 'axios';
 
 const BACKEND_URL = 'http://localhost:5002';
+const EARLIEST_DATE = new Date('2000-01-01');
 
 function NewAccountPage(){
     const userContext = useContext(UserContext);
@@ -31,13 +33,57 @@ function NewAccountPage(){
     };
     const handleClose = () => setOpen(false);
 
-    const [portfolioForm, setPortfolioForm] = useState({
+    const [portfolioForm, setPortfolioForm] = useState<{
+        name: string;
+        balance: string;
+        date: Date | null;
+    }>({
         name: '',
-        balance: ''
+        balance: '',
+        date: null
     });
 
     const [nameError, setNameError] = useState(false);
     const [balanceError, setBalanceError] = useState(false);
+
+    const addPortfolio = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+    
+        const name = portfolioForm.name.trim();
+        const balance = parseFloat(portfolioForm.balance);
+        const date = portfolioForm.date;
+        if (name && balance && date && date >= EARLIEST_DATE && date <= new Date() && balance > 0){
+            const token = localStorage.getItem('authToken');
+
+            if (!token){
+                console.error("User is not authenticated");
+                return;
+            }
+            try{
+                const response = await axios.post(`${BACKEND_URL}/api/portfolio/create`, {
+                    name,
+                    balance,
+                    date
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.status === 200 || response.status === 201){
+                    const newPortfolio: Portfolio = response.data;
+                    user.portfolios.push(newPortfolio);
+                    handleClose();
+                }
+            } catch (error){
+                if (axios.isAxiosError(error)){
+                    console.error("Failed to create portfolio", error.response ? error.response.data : error.message);
+                } else {
+                    console.error("Failed to create portfolio", error);
+                }
+            }
+            handleClose();
+        }
+    }
 
     return (
         <Box sx={{ p:3}}>
@@ -78,44 +124,10 @@ function NewAccountPage(){
                             onClose={handleClose}
                             PaperProps={{
                                 component: 'form',
-                                onSubmit: async (e: React.FormEvent<HTMLFormElement>) => {
-                                    e.preventDefault();
-                                
-                                    const name = portfolioForm.name.trim();
-                                    const balance = parseFloat(portfolioForm.balance);
-                                    if (name && balance && balance > 0){
-                                        const token = localStorage.getItem('authToken');
-
-                                        if (!token){
-                                            console.error("User is not authenticated");
-                                            return;
-                                        }
-                                        try{
-                                            const response = await axios.post(`${BACKEND_URL}/api/portfolio/create`, {
-                                                name,
-                                                balance
-                                            }, {
-                                                headers: {
-                                                    'Authorization': `Bearer ${token}`
-                                                }
-                                            });
-                                            if (response.status === 200 || response.status === 201){
-                                                const newPortfolio: Portfolio = response.data;
-                                                user.portfolios.push(newPortfolio);
-                                                handleClose();
-                                            }
-                                        } catch (error){
-                                            if (axios.isAxiosError(error)){
-                                                console.error("Failed to create portfolio", error.response ? error.response.data : error.message);
-                                            } else {
-                                                console.error("Failed to create portfolio", error);
-                                            }
-                                        }
-                                        handleClose();
-                                    }
+                                onSubmit: addPortfolio
                                 }
-                            }}
-                            >
+                            }
+                        >
                             <DialogTitle>New Portfolio</DialogTitle>
                             <DialogContent>
                                 <TextField
@@ -127,6 +139,7 @@ function NewAccountPage(){
                                     label="Portfolio Name"
                                     type="text"
                                     fullWidth
+                                    sx = {{ mb: 2 }}
                                     onBlur = {() => {
                                         if (portfolioForm.name){
                                             setNameError(false);
@@ -135,29 +148,38 @@ function NewAccountPage(){
                                         }
                                     }}
                                     onChange = {(e) => setPortfolioForm({...portfolioForm, name: e.target.value})}
+                                    
                                 />
-                                <TextField
-                                    required
-                                    value={portfolioForm.balance}
-                                    error={balanceError}
-                                    margin="dense"
-                                    name="balance"
-                                    label="Starting Balance"
-                                    type="number"
-                                    fullWidth
-                                    InputProps={{
-                                        startAdornment: (<InputAdornment position="start">$</InputAdornment>)
-                                    }}
-                                    onBlur = {() => {
-                                        if (portfolioForm.balance && parseFloat(portfolioForm.balance) > 0){
-                                            setBalanceError(false);
-                                        } else {
-                                            setBalanceError(true);
-                                        }
-                                    }}
-                                    onChange = {(e) => setPortfolioForm({...portfolioForm, balance: e.target.value})}
-                                />
-                                <DatePicker label="Start Date" />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap:2 }}>
+                                    <TextField
+                                        required
+                                        value={portfolioForm.balance}
+                                        error={balanceError}
+                                        margin="dense"
+                                        name="balance"
+                                        label="Starting Balance"
+                                        type="number"
+                                        InputProps={{
+                                            startAdornment: (<InputAdornment position="start">$</InputAdornment>)
+                                        }}
+                                        onBlur = {() => {
+                                            if (portfolioForm.balance && parseFloat(portfolioForm.balance) > 0){
+                                                setBalanceError(false);
+                                            } else {
+                                                setBalanceError(true);
+                                            }
+                                        }}
+                                        onChange = {(e) => setPortfolioForm({...portfolioForm, balance: e.target.value})}
+                                    />
+                                    <DatePicker 
+                                        label="Start Date" 
+                                        value = {portfolioForm.date}
+                                        onChange = {(date) => setPortfolioForm({...portfolioForm, date})}
+                                        minDate={EARLIEST_DATE}
+                                        maxDate={new Date()}
+                                    />
+                                </Box>
+                                
                                 <DialogActions>
                                     <Button onClick={handleClose}>Cancel</Button>
                                     <Button type="submit">Create</Button>
