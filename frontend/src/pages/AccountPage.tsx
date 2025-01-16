@@ -20,7 +20,7 @@ import axios from 'axios';
 const BACKEND_URL = 'http://localhost:5002';
 const EARLIEST_DATE = new Date('2000-01-01');
 
-function NewAccountPage(){
+function AccountPage(){
     const userContext = useContext(UserContext);
     if (!userContext){
         throw new Error('UserContext is not found');
@@ -199,4 +199,4 @@ function NewAccountPage(){
     )
 }
 
-export default NewAccountPage;
+export default AccountPage;
