@@ -15,15 +15,21 @@ import {
   FormControl,
   InputLabel,
   Paper,
-  IconButton
+  IconButton,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../UserContext';
 import { getPortfolioReport } from '../portfolioUtil';
-import { Ticker, Transaction } from '../types';
+import { Portfolio, Ticker, Transaction } from '../types';
+import { PortfolioOverview } from '../components/PortfolioOverview';
+import TabPanel from '../components/TabPanel';
+import PortfolioHoldings from '../components/PortfolioHoldings';
+import PortfolioHistory from '../components/PortfolioHistory';
 
 interface EditingTransaction {
   id: number | null;
@@ -40,30 +46,30 @@ interface Account {
 }
 
 function PortfolioPage() {
-  const getPortfolioById = (id: any) => {
-    return user.portfolios.find((portfolio: { id: number; }) => portfolio.id === Number(id));
-  };
-
   const userContext = useContext(UserContext);
   if (!userContext){
       throw new Error('UserContext is not found');
   }
+  const navigate = useNavigate();
   const { user } = userContext;
   const { id } = useParams()
-  const [portfolio, setPortfolio] = useState(getPortfolioById(id));
-  const [portfolioReport, setPortfolioReport] = useState(getPortfolioReport(portfolio));
+
+  const getPortfolioById = (id: any) => {
+    return user?.portfolios.find((portfolio: { id: number; }) => portfolio.id === Number(id));
+  };
+
+  const [portfolio, setPortfolio] = useState<Portfolio | undefined>(getPortfolioById(id));
+  const [portfolioReport, setPortfolioReport] = useState(portfolio ? getPortfolioReport(portfolio) : {});
 
   useEffect(() => {
-    setPortfolioReport(getPortfolioReport(portfolio))
+      if (!portfolio){
+        navigate('/account')
+      } else {
+          setPortfolioReport(getPortfolioReport(portfolio));
+      }
   }, [portfolio])
-  
-  // Available Cash
-  const [availableCash, setAvailableCash] = useState('0.00');
-  const [isEditingCash, setIsEditingCash] = useState(false);
-  const [tempCash, setTempCash] = useState('');
 
-  // Holdings Date
-  const [holdingsDate, setHoldingsDate] = useState('');
+  const [tab, setTab] = useState<number>(0);
 
   // Sorting states
   const [sortBy, setSortBy] = useState('');
@@ -480,282 +486,27 @@ function PortfolioPage() {
       
 
       {/* Account Summary */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Portfolio Summary</Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box>
-            <Typography variant="subtitle2">Total Portfolio Value</Typography>
-            <Typography variant="h4">$0.00</Typography>
-          </Box>
-          <Box>
-            <Typography variant="subtitle2">Available Cash</Typography>
-            <Typography variant="h4">${portfolio.balance.toFixed(2)}</Typography>
-          </Box>
-          <Box>
-            <Typography variant="subtitle2">Total Return</Typography>
-            <Typography variant="h4">$0.00 (0%)</Typography>
-          </Box>
-        </Box>
+      {portfolio && <PortfolioOverview portfolio={portfolio} />}
+      <Paper elevation={3} sx={{ p: 3, mb : 3 }}>
+        <Tabs 
+          value = {tab}
+          onChange={(event: React.SyntheticEvent, newTab: number) => {
+            setTab(newTab)
+          }}
+        >
+          <Tab label="Holdings" value={0} />
+          <Tab label="History" value={1} />
+          <Tab label="Trade" value={2} />
+        </Tabs>
+        <TabPanel value={tab} index={0}>
+          {portfolio && <PortfolioHoldings portfolio={portfolio} portfolioReport={portfolioData} />}
+        </TabPanel>
+        <TabPanel value={tab} index={1}>
+          <PortfolioHistory portfolioReport={portfolioData} />
+        </TabPanel>
       </Paper>
 
-      {/* Portfolio Holdings */}
       <Paper elevation={3} sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
-            Portfolio Holdings as of {new Date(portfolio.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </Typography>
-        </Box>
-
-        {/* Holdings Table with Sort */}
-        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Sort Holdings By</InputLabel>
-            <Select
-              value={sortBy}
-              label="Sort Holdings By"
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <MenuItem value="">None</MenuItem>
-              <MenuItem value="symbol">Symbol (A to Z)</MenuItem>
-              <MenuItem value="symbolDesc">Symbol (Z to A)</MenuItem>
-              <MenuItem value="sharesAsc">Shares (Low to High)</MenuItem>
-              <MenuItem value="sharesDesc">Shares (High to Low)</MenuItem>
-              <MenuItem value="priceAsc">Price (Low to High)</MenuItem>
-              <MenuItem value="priceDesc">Price (High to Low)</MenuItem>
-              <MenuItem value="valueAsc">Value (Low to High)</MenuItem>
-              <MenuItem value="valueDesc">Value (High to Low)</MenuItem>
-              <MenuItem value="gainLossAsc">Gain/Loss $ (Low to High)</MenuItem>
-              <MenuItem value="gainLossDesc">Gain/Loss $ (High to Low)</MenuItem>
-              <MenuItem value="gainLossPercentAsc">Gain/Loss % (Low to High)</MenuItem>
-              <MenuItem value="gainLossPercentDesc">Gain/Loss % (High to Low)</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Symbol</TableCell>
-                <TableCell>Shares</TableCell>
-                <TableCell>Avg Price</TableCell>
-                <TableCell>Current Price</TableCell>
-                <TableCell>Total Cost</TableCell>
-                <TableCell>Total Value</TableCell>
-                <TableCell>Gain/Loss ($)</TableCell>
-                <TableCell>Gain/Loss (%)</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedPortfolioData.map((holding) => (
-                //FIX HERE LATER
-                <TableRow key={holding.symbol}>
-                  <TableCell>{holding.symbol}</TableCell>
-                  <TableCell>{holding.shares}</TableCell>
-                  <TableCell>${holding.avgPrice.toFixed(2)}</TableCell>
-                  <TableCell>${holding.currentPrice.toFixed(2)}</TableCell>
-                  <TableCell>${holding.totalCost.toFixed(2)}</TableCell>
-                  <TableCell>${holding.totalValue.toFixed(2)}</TableCell>
-                  <TableCell 
-                    sx={{ 
-                      color: holding.gainLoss >= 0 ? 'success.main' : 'error.main' 
-                    }}
-                  >
-                    ${holding.gainLoss.toFixed(2)}
-                  </TableCell>
-                  <TableCell
-                    sx={{ 
-                      color: holding.gainLossPercent >= 0 ? 'success.main' : 'error.main' 
-                    }}
-                  >
-                    {holding.gainLossPercent.toFixed(2)}%
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Transactions Table with Sort and Edit */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mt: 4, mb: 2 }}>
-          <Typography variant="h6">Transaction History</Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Sort By</InputLabel>
-              <Select
-                value={transactionSortBy}
-                label="Sort By"
-                onChange={(e) => setTransactionSortBy(e.target.value)}
-              >
-                <MenuItem value="date">Date (Most Recent)</MenuItem>
-                <MenuItem value="symbol">Company & Date</MenuItem>
-              </Select>
-            </FormControl>
-            <Button 
-              variant="contained" 
-              onClick={() => {
-                setIsAddingTransaction(true);
-                setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' });
-              }}
-            >
-              Add Transaction
-            </Button>
-          </Box>
-        </Box>
-
-        {isAddingTransaction && (
-          <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-            <Typography variant="h6" gutterBottom>Add New Transaction</Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Symbol"
-                value={editingTransaction.symbol}
-                onChange={(e) => setEditingTransaction({...editingTransaction, symbol: e.target.value})}
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                label="Date"
-                type="date"
-                value={editingTransaction.date}
-                onChange={(e) => setEditingTransaction({...editingTransaction, date: e.target.value})}
-                InputLabelProps={{ shrink: true }}
-                sx={{ flex: 1 }}
-              />
-              <FormControl sx={{ flex: 1 }}>
-                <InputLabel>Action</InputLabel>
-                <Select
-                  value={editingTransaction.action}
-                  label="Action"
-                  onChange={(e) => setEditingTransaction({...editingTransaction, action: e.target.value})}
-                >
-                  <MenuItem value="Buy">Buy</MenuItem>
-                  <MenuItem value="Sell">Sell</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                label="Shares"
-                type="number"
-                value={editingTransaction.shares}
-                onChange={(e) => setEditingTransaction({...editingTransaction, shares: e.target.value})}
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                label="Price"
-                type="number"
-                value={editingTransaction.price}
-                onChange={(e) => setEditingTransaction({...editingTransaction, price: e.target.value})}
-                sx={{ flex: 1 }}
-              />
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button variant="contained" color="primary" onClick={handleAddTransaction}>
-                  Save
-                </Button>
-                <Button variant="outlined" onClick={() => setIsAddingTransaction(false)}>
-                  Cancel
-                </Button>
-              </Box>
-            </Box>
-          </Box>
-        )}
-
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Symbol</TableCell>
-                <TableCell>Action</TableCell>
-                <TableCell>Shares</TableCell>
-                <TableCell>Price</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedTransactions.map((transaction, index) => (
-                <TableRow key={`${transaction.symbol}-${index}`}>
-                  {editingTransaction.id === transaction.id ? (
-                    <>
-                      <TableCell>
-                        <TextField
-                          type="date"
-                          value={editingTransaction.date}
-                          onChange={(e) => setEditingTransaction({...editingTransaction, date: e.target.value})}
-                          size="small"
-                          InputLabelProps={{ shrink: true }}
-                        />
-                      </TableCell>
-                      <TableCell>{transaction.symbol}</TableCell>
-                      <TableCell>
-                        <Select
-                          value={editingTransaction.action}
-                          onChange={(e) => setEditingTransaction({...editingTransaction, action: e.target.value})}
-                          size="small"
-                        >
-                          <MenuItem value="buy">Buy</MenuItem>
-                          <MenuItem value="sell">Sell</MenuItem>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          value={editingTransaction.shares}
-                          onChange={(e) => setEditingTransaction({...editingTransaction, shares: e.target.value})}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          value={editingTransaction.price}
-                          onChange={(e) => setEditingTransaction({...editingTransaction, price: e.target.value})}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        ${(parseFloat(editingTransaction.shares || '0') * parseFloat(editingTransaction.price || '0')).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Button size="small" variant="contained" onClick={handleSaveTransaction}>
-                            Save
-                          </Button>
-                          <Button 
-                            size="small" 
-                            variant="outlined" 
-                            onClick={() => setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' })}
-                          >
-                            Cancel
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    </>
-                  ) : (
-                    <>
-                      <TableCell>{transaction.date.toLocaleDateString()}</TableCell>
-                      <TableCell>{transaction.symbol}</TableCell>
-                      <TableCell>{transaction.action}</TableCell>
-                      <TableCell>{transaction.shares}</TableCell>
-                      <TableCell>${transaction.price.toFixed(2)}</TableCell>
-                      <TableCell>${transaction.total.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <IconButton size="small" onClick={() => handleEditTransaction(transaction)}>
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton size="small" onClick={() => handleDeleteTransaction(transaction.id, transaction.symbol)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
-                      </TableCell>
-                    </>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
         {/* Performance Period Form and Graph */}
         <Box sx={{ mt: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>

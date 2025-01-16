@@ -78,13 +78,13 @@ export async function getTickerSummary(ticker: string, transactions: Transaction
     };
 }
 
-export async function getPortfolioReport(portfolio:Portfolio): Promise<Record<string, Ticker>>{
-    const summary: Record<string, Ticker> = {};
+export async function getPortfolioReport(portfolio: Portfolio): Promise<Ticker[]> {
+    const summary: Ticker[] = [];
     const groupedTransactions = groupTransactionsByTicker(portfolio.transactions);
-    for(const ticker in groupedTransactions){
+    for (const ticker in groupedTransactions) {
         const transactions = groupedTransactions[ticker];
         const tickerSummary = await getTickerSummary(ticker, transactions, portfolio.date);
-        summary[ticker] = tickerSummary;
+        summary.push(tickerSummary);
     }
     return summary;
 }
