@@ -1,11 +1,11 @@
 import { TableCell, TableRow } from "@mui/material";
 import { Ticker } from "../types";
 
-interface TickerRowComponentProps {
+interface TickerRowProps {
     ticker: Ticker;
 }
 
-export const TickerRowComponent: React.FC<TickerRowComponentProps> = ({ ticker }) => {
+export const TickerRow: React.FC<TickerRowProps> = ({ ticker }) => {
 
     return (
         <TableRow key={ticker.symbol}>

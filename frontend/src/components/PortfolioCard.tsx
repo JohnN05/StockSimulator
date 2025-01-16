@@ -5,17 +5,17 @@ import {
     Typography
 } from "@mui/material";
 
-interface PortfolioComponentProps {
+interface PortfolioCardProps {
     portfolio: Portfolio;
 }
 
-export const PortfolioComponent: React.FC<PortfolioComponentProps> = ({ portfolio }) => {
+export const PortfolioCard: React.FC<PortfolioCardProps> = ({ portfolio }) => {
     const navigate = useNavigate();
 
     return (
         <Box 
             key = {portfolio.id}
-            onClick = {() => navigate(`/portfolio/${portfolio.id}`)}
+            onClick = {() => navigate(`/account/${portfolio.id}`)}
             sx={{ border:1, p: 3 }}
         >
             <Typography variant = "subtitle2">{portfolio.name}</Typography>
