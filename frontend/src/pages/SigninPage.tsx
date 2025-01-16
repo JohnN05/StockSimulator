@@ -3,10 +3,12 @@ import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
 import { User } from "../types";
 import { UserContext } from "../UserContext";
+import { useNavigate } from "react-router-dom";
 
 const BACKEND_URL = 'http://localhost:5002';
 
 const SigninPage: React.FC = () => {
+    const navigate = useNavigate();
 
     const userContext = useContext(UserContext);
     if (!userContext){
@@ -49,6 +51,7 @@ const SigninPage: React.FC = () => {
             if (token && user){
                 localStorage.setItem('authToken', token);
                 setUser(parseUser(user));
+                navigate('/account')
             }
             
             

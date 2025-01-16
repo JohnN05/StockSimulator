@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { UserContext } from "../UserContext";
-import { PortfolioComponent } from "../components/PortfolioComponent";
+import { PortfolioCard } from "../components/PortfolioCard";
 import {
     Box,
     Button,
@@ -71,7 +71,9 @@ function AccountPage(){
                 });
                 if (response.status === 200 || response.status === 201){
                     const newPortfolio: Portfolio = response.data;
-                    user.portfolios.push(newPortfolio);
+                    if (user) {
+                        user.portfolios.push(newPortfolio);
+                    }
                     handleClose();
                 }
             } catch (error){
@@ -112,7 +114,7 @@ function AccountPage(){
                             
                             <Box sx={{ display: 'flex', gap: 2 }}>
                                 {user.portfolios.length > 0 ? (user.portfolios.map((portfolio:Portfolio) => (
-                                    <PortfolioComponent key={portfolio.id} portfolio={portfolio} />
+                                    <PortfolioCard key={portfolio.id} portfolio={portfolio} />
                                 ))
                             ) : (
                                 <Typography color="text.secondary" variant="subtitle2">Portfolios will appear here.</Typography>
