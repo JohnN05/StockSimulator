@@ -87,7 +87,7 @@ function App() {
           <Routes>
             <Route path="/" element={<AccountPage />} />
             <Route path="/account" element={<AccountPage />} />
-            <Route path ="/portfolio/:id" element={<PortfolioPage />} />
+            <Route path ="/account/:id" element={<PortfolioPage />} />
             <Route path="/trade" element={<TradePage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/signin" element={<SigninPage />} />

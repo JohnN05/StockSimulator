@@ -71,10 +71,6 @@ function PortfolioPage() {
 
   const [tab, setTab] = useState<number>(0);
 
-  // Sorting states
-  const [sortBy, setSortBy] = useState('');
-  const [transactionSortBy, setTransactionSortBy] = useState('date');
-
   // Mock Portfolio Data 
   const [portfolioData, setPortfolioData] = useState<Ticker[]>([
     {
@@ -193,39 +189,6 @@ function PortfolioPage() {
     }
   ]);
 
-  // Get all transactions and sort them
-  const sortedTransactions = useMemo(() => {
-    const allTransactions = portfolioData.flatMap(holding => 
-      holding.transactions.map(transaction => ({
-        ...transaction,
-        symbol: holding.symbol
-      }))
-    );
-
-    if (transactionSortBy === 'date') {
-      return allTransactions.sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-    } else {
-      return allTransactions.sort((a, b) => {
-        const symbolCompare = a.symbol.localeCompare(b.symbol);
-        if (symbolCompare !== 0) return symbolCompare;
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      });
-    }
-  }, [portfolioData, transactionSortBy]);
-
-  // Transaction editing state
-  const [editingTransaction, setEditingTransaction] = useState<EditingTransaction>({
-    id: null,
-    date: '',
-    symbol: '',
-    action: '',
-    shares: '',
-    price: ''
-  });
-  const [isAddingTransaction, setIsAddingTransaction] = useState(false);
-
   // Portfolio performance state
   const [performancePeriod, setPerformancePeriod] = useState({
     startDate: '',
@@ -245,17 +208,6 @@ function PortfolioPage() {
     change: 0,
     changePercent: 0,
     dataPoints: []
-  });
-
-  // Add Holdings Form
-  const [newHolding, setNewHolding] = useState({
-    symbol: '',
-    shares: '',
-    price: '',
-    totalValue: '',
-    date: '',
-    action: '',
-    orderType: ''
   });
 
   // Calculate portfolio value at a given date based on transactions
@@ -329,157 +281,6 @@ function PortfolioPage() {
   //     });
   //   }
   // }, [performancePeriod, portfolioData, sortedTransactions]);
-
-  // Handle transaction edit
-  const handleEditTransaction = (transaction: Transaction) => {
-    // setEditingTransaction({
-    //   id: transaction.id,
-    //   date: transaction.date,
-    //   symbol: transaction.ticker,
-    //   action: transaction.action,
-    //   shares: transaction.shares.toString(),
-    //   price: transaction.price.toString()
-    // });
-  };
-
-  // Handle transaction save
-  const handleSaveTransaction = () => {
-    // if (!editingTransaction.id) return;
-
-    // const updatedTransaction = {
-    //   id: editingTransaction.id,
-    //   date: editingTransaction.date,
-    //   symbol: editingTransaction.symbol,
-    //   action: editingTransaction.action,
-    //   shares: parseFloat(editingTransaction.shares),
-    //   price: parseFloat(editingTransaction.price),
-    //   total: parseFloat(editingTransaction.shares) * parseFloat(editingTransaction.price)
-    // };
-
-    // // Update transactions in portfolio data
-    // const updatedPortfolioData = portfolioData.map(holding => {
-    //   if (holding.symbol === updatedTransaction.symbol) {
-    //     const updatedTransactions = holding.transactions.map(t =>
-    //       t.id === updatedTransaction.id ? updatedTransaction : t
-    //     );
-    //     return {
-    //       ...holding,
-    //       transactions: updatedTransactions
-    //     };
-    //   }
-    //   return holding;
-    // });
-
-    // setPortfolioData(updatedPortfolioData);
-    // setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' });
-  };
-
-  // Handle transaction delete
-  const handleDeleteTransaction = (transactionId: number, symbol: string) => {
-    // const updatedPortfolioData = portfolioData.map(holding => {
-    //   if (holding.symbol === symbol) {
-    //     return {
-    //       ...holding,
-    //       transactions: holding.transactions.filter(t => t.id !== Number(transactionId))
-    //     };
-    //   }
-    //   return holding;
-    // });
-
-    // setPortfolioData(updatedPortfolioData);
-  };
-
-  // Handle add new transaction
-  const handleAddTransaction = () => {
-    // if (!editingTransaction.symbol || !editingTransaction.shares || !editingTransaction.price) return;
-
-    // const newTransaction = {
-    //   id: 1,
-    //   date: editingTransaction.date,
-    //   symbol: editingTransaction.symbol.toUpperCase(),
-    //   action: editingTransaction.action,
-    //   shares: parseFloat(editingTransaction.shares),
-    //   price: parseFloat(editingTransaction.price),
-    //   total: parseFloat(editingTransaction.shares) * parseFloat(editingTransaction.price)
-    // };
-
-    // // Update or create holding
-    // let updatedPortfolioData = [...portfolioData];
-    // const holdingIndex = updatedPortfolioData.findIndex(h => h.symbol === newTransaction.symbol);
-
-    // if (holdingIndex >= 0) {
-    //   updatedPortfolioData[holdingIndex].transactions.push(newTransaction);
-    // } else {
-    //   updatedPortfolioData.push({
-    //     symbol: newTransaction.symbol,
-    //     shares: newTransaction.shares,
-    //     avgPrice: newTransaction.price,
-    //     currentPrice: newTransaction.price,
-    //     totalCost: newTransaction.total,
-    //     totalValue: newTransaction.total,
-    //     gainLoss: 0,
-    //     gainLossPercent: 0,
-    //     transactions: [newTransaction]
-    //   });
-    // }
-
-    // setPortfolioData(updatedPortfolioData);
-    // setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' });
-    // setIsAddingTransaction(false);
-  };
-
-  // Sort portfolio data based on selected option
-  const sortedPortfolioData = useMemo(() => {
-    if (!sortBy) return portfolioData;
-    
-    return [...portfolioData].sort((a, b) => {
-      switch (sortBy) {
-        case 'symbol':
-          return a.symbol.localeCompare(b.symbol);
-        case 'symbolDesc':
-          return b.symbol.localeCompare(a.symbol);
-        case 'sharesAsc':
-          return a.shares - b.shares;
-        case 'sharesDesc':
-          return b.shares - a.shares;
-        case 'priceAsc':
-          return a.currentPrice - b.currentPrice;
-        case 'priceDesc':
-          return b.currentPrice - a.currentPrice;
-        case 'valueAsc':
-          return a.totalValue - b.totalValue;
-        case 'valueDesc':
-          return b.totalValue - a.totalValue;
-        case 'gainLossAsc':
-          return a.gainLoss - b.gainLoss;
-        case 'gainLossDesc':
-          return b.gainLoss - a.gainLoss;
-        case 'gainLossPercentAsc':
-          return a.gainLossPercent - b.gainLossPercent;
-        case 'gainLossPercentDesc':
-          return b.gainLossPercent - a.gainLossPercent;
-        default:
-          return 0;
-      }
-    });
-  }, [portfolioData, sortBy]);
-
-  // const handleCashConfirm = () => {
-  //   const numValue = parseFloat(tempCash.replace(/[^\d.-]/g, ''));
-  //   if (isNaN(numValue)) {
-  //     setTempCash(availableCash);
-  //   } else {
-  //     setAvailableCash(numValue.toFixed(2));
-  //   }
-  //   setIsEditingCash(false);
-  // };
-
-  // const handleCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const value = e.target.value.replace(/[^\d.]/g, '');
-  //   const parts = value.split('.');
-  //   if (parts.length > 2) return;
-  //   setTempCash(value);
-  // };
 
   return (
     <Box sx={{ p: 3 }}>

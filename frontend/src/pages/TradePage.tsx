@@ -23,6 +23,8 @@ interface StockData {
 
 const BACKEND_URL = 'http://localhost:5002';
 
+
+
 const TradePage: React.FC = () => {
   const [tradeForm, setTradeForm] = useState({
     symbol: '',
