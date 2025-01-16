@@ -22,38 +22,16 @@ import EditIcon from '@mui/icons-material/Edit';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useParams } from 'react-router-dom';
 import { UserContext } from '../UserContext';
-
-interface Transaction {
-  id: string;
-  date: string;
-  symbol: string;
-  action: string;
-  orderType: string;
-  shares: number;
-  price: number;
-  total: number;
-}
+import { getPortfolioReport } from '../portfolioUtil';
+import { Ticker, Transaction } from '../types';
 
 interface EditingTransaction {
-  id: string | null;
+  id: number | null;
   date: string;
   symbol: string;
   action: string;
-  orderType: string;
   shares: string;
   price: string;
-}
-
-interface Portfolio {
-  symbol: string;
-  shares: number;
-  avgPrice: number;
-  currentPrice: number;
-  totalCost: number;
-  totalValue: number;
-  gainLoss: number;
-  gainLossPercent: number;
-  transactions: Transaction[];
 }
 
 interface Account {
@@ -73,13 +51,11 @@ function PortfolioPage() {
   const { user } = userContext;
   const { id } = useParams()
   const [portfolio, setPortfolio] = useState(getPortfolioById(id));
+  const [portfolioReport, setPortfolioReport] = useState(getPortfolioReport(portfolio));
 
-  // Account Management
-  const [accounts, setAccounts] = useState<Account[]>([
-    { name: 'Personal Account', id: '1' }
-  ]);
-  const [selectedAccount, setSelectedAccount] = useState('1');
-  const [newAccountName, setNewAccountName] = useState('');
+  useEffect(() => {
+    setPortfolioReport(getPortfolioReport(portfolio))
+  }, [portfolio])
   
   // Available Cash
   const [availableCash, setAvailableCash] = useState('0.00');
@@ -94,7 +70,7 @@ function PortfolioPage() {
   const [transactionSortBy, setTransactionSortBy] = useState('date');
 
   // Mock Portfolio Data 
-  const [portfolioData, setPortfolioData] = useState<Portfolio[]>([
+  const [portfolioData, setPortfolioData] = useState<Ticker[]>([
     {
       symbol: 'AAPL',
       shares: 10,
@@ -106,21 +82,19 @@ function PortfolioPage() {
       gainLossPercent: 10.00,
       transactions: [
         {
-          id: '1',
-          date: '2023-12-15',
-          symbol: 'AAPL',
-          action: 'Buy',
-          orderType: 'Market',
+          id: 1,
+          date: new Date('2023-12-15'),
+          ticker: 'AAPL',
+          action: 'buy',
           shares: 5,
           price: 100.00,
           total: 500.00
         },
         {
-          id: '2',
-          date: '2023-12-20',
-          symbol: 'AAPL',
-          action: 'Buy',
-          orderType: 'Limit',
+          id: 2,
+          date: new Date('2023-12-20'),
+          ticker: 'AAPL',
+          action: 'buy',
           shares: 5,
           price: 100.00,
           total: 500.00
@@ -138,11 +112,10 @@ function PortfolioPage() {
       gainLossPercent: -10.00,
       transactions: [
         {
-          id: '3',
-          date: '2023-12-10',
-          symbol: 'MSFT',
-          action: 'Buy',
-          orderType: 'Market',
+          id: 3,
+          date: new Date('2023-12-10'),
+          ticker: 'MSFT',
+          action: 'buy',
           shares: 5,
           price: 100.00,
           total: 500.00
@@ -160,11 +133,10 @@ function PortfolioPage() {
       gainLossPercent: 10.00,
       transactions: [
         {
-          id: '4',
-          date: '2023-12-05',
-          symbol: 'GOOGL',
-          action: 'Buy',
-          orderType: 'Market',
+          id: 4,
+          date: new Date('2023-12-05'),
+          ticker: 'GOOGL',
+          action: 'buy',
           shares: 1,
           price: 1000.00,
           total: 1000.00
@@ -182,11 +154,10 @@ function PortfolioPage() {
       gainLossPercent: -20.00,
       transactions: [
         {
-          id: '5',
-          date: '2023-12-01',
-          symbol: 'META',
-          action: 'Buy',
-          orderType: 'Market',
+          id: 5,
+          date: new Date('2023-12-01'),
+          ticker: 'META',
+          action: 'buy',
           shares: 2,
           price: 10.00,
           total: 20.00
@@ -204,11 +175,10 @@ function PortfolioPage() {
       gainLossPercent: 50.00,
       transactions: [
         {
-          id: '6',
-          date: '2023-12-25',
-          symbol: 'TSLA',
-          action: 'Buy',
-          orderType: 'Market',
+          id: 6,
+          date: new Date('2023-12-25'),
+          ticker: 'TSLA',
+          action: 'buy',
           shares: 5,
           price: 10.00,
           total: 50.00
@@ -245,7 +215,6 @@ function PortfolioPage() {
     date: '',
     symbol: '',
     action: '',
-    orderType: '',
     shares: '',
     price: ''
   });
@@ -285,175 +254,172 @@ function PortfolioPage() {
 
   // Calculate portfolio value at a given date based on transactions
   const calculatePortfolioValue = (date: string) => {
-    const relevantTransactions = sortedTransactions.filter(t => t.date <= date);
-    const holdings = new Map<string, { shares: number; totalCost: number }>();
+    // const relevantTransactions = sortedTransactions.filter(t => t.date <= date);
+    // const holdings = new Map<string, { shares: number; totalCost: number }>();
     
-    relevantTransactions.forEach(t => {
-      const current = holdings.get(t.symbol) || { shares: 0, totalCost: 0 };
-      if (t.action === 'buy') {
-        holdings.set(t.symbol, {
-          shares: current.shares + t.shares,
-          totalCost: current.totalCost + t.total
-        });
-      } else {
-        holdings.set(t.symbol, {
-          shares: current.shares - t.shares,
-          totalCost: current.totalCost - (current.totalCost * (t.shares / current.shares))
-        });
-      }
-    });
+    // relevantTransactions.forEach(t => {
+    //   const current = holdings.get(t.symbol) || { shares: 0, totalCost: 0 };
+    //   if (t.action === 'buy') {
+    //     holdings.set(t.symbol, {
+    //       shares: current.shares + t.shares,
+    //       totalCost: current.totalCost + t.total
+    //     });
+    //   } else {
+    //     holdings.set(t.symbol, {
+    //       shares: current.shares - t.shares,
+    //       totalCost: current.totalCost - (current.totalCost * (t.shares / current.shares))
+    //     });
+    //   }
+    // });
 
-    return Array.from(holdings.entries()).reduce((total, [symbol, data]) => {
-      const stock = portfolioData.find(p => p.symbol === symbol);
-      return total + (stock ? data.shares * stock.currentPrice : 0);
-    }, 0);
+    // return Array.from(holdings.entries()).reduce((total, [symbol, data]) => {
+    //   const stock = portfolioData.find(p => p.symbol === symbol);
+    //   return total + (stock ? data.shares * stock.currentPrice : 0);
+    // }, 0);
   };
 
   // Update portfolio performance when date range changes
-  useEffect(() => {
-    if (performancePeriod.startDate && performancePeriod.endDate) {
-      const startValue = calculatePortfolioValue(performancePeriod.startDate);
-      const endValue = calculatePortfolioValue(performancePeriod.endDate);
-      const change = endValue - startValue;
-      const changePercent = startValue !== 0 ? (change / startValue) * 100 : 0;
+  // useEffect(() => {
+  //   if (performancePeriod.startDate && performancePeriod.endDate) {
+  //     const startValue = calculatePortfolioValue(performancePeriod.startDate);
+  //     const endValue = calculatePortfolioValue(performancePeriod.endDate);
+  //     const change = endValue - startValue;
+  //     const changePercent = startValue !== 0 ? (change / startValue) * 100 : 0;
 
-      // Generate data points based on interval
-      const dataPoints: { date: string; value: number }[] = [];
-      let currentDate = new Date(performancePeriod.startDate);
-      const endDate = new Date(performancePeriod.endDate);
+  //     // Generate data points based on interval
+  //     const dataPoints: { date: string; value: number }[] = [];
+  //     let currentDate = new Date(performancePeriod.startDate);
+  //     const endDate = new Date(performancePeriod.endDate);
 
-      while (currentDate <= endDate) {
-        dataPoints.push({
-          date: currentDate.toISOString().split('T')[0],
-          value: calculatePortfolioValue(currentDate.toISOString().split('T')[0])
-        });
+  //     while (currentDate <= endDate) {
+  //       dataPoints.push({
+  //         date: currentDate.toISOString().split('T')[0],
+  //         value: calculatePortfolioValue(currentDate.toISOString().split('T')[0])
+  //       });
 
-        // Increment based on interval
-        switch (performancePeriod.interval) {
-          case 'day':
-            currentDate.setDate(currentDate.getDate() + 1);
-            break;
-          case 'week':
-            currentDate.setDate(currentDate.getDate() + 7);
-            break;
-          case 'month':
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            break;
-          case 'year':
-            currentDate.setFullYear(currentDate.getFullYear() + 1);
-            break;
-        }
-      }
+  //       // Increment based on interval
+  //       switch (performancePeriod.interval) {
+  //         case 'day':
+  //           currentDate.setDate(currentDate.getDate() + 1);
+  //           break;
+  //         case 'week':
+  //           currentDate.setDate(currentDate.getDate() + 7);
+  //           break;
+  //         case 'month':
+  //           currentDate.setMonth(currentDate.getMonth() + 1);
+  //           break;
+  //         case 'year':
+  //           currentDate.setFullYear(currentDate.getFullYear() + 1);
+  //           break;
+  //       }
+  //     }
 
-      setPortfolioPerformance({
-        currentValue: endValue,
-        startValue,
-        change,
-        changePercent,
-        dataPoints
-      });
-    }
-  }, [performancePeriod, portfolioData, sortedTransactions]);
+  //     setPortfolioPerformance({
+  //       currentValue: endValue,
+  //       startValue,
+  //       change,
+  //       changePercent,
+  //       dataPoints
+  //     });
+  //   }
+  // }, [performancePeriod, portfolioData, sortedTransactions]);
 
   // Handle transaction edit
   const handleEditTransaction = (transaction: Transaction) => {
-    setEditingTransaction({
-      id: transaction.id,
-      date: transaction.date,
-      symbol: transaction.symbol,
-      action: transaction.action,
-      orderType: transaction.orderType,
-      shares: transaction.shares.toString(),
-      price: transaction.price.toString()
-    });
+    // setEditingTransaction({
+    //   id: transaction.id,
+    //   date: transaction.date,
+    //   symbol: transaction.ticker,
+    //   action: transaction.action,
+    //   shares: transaction.shares.toString(),
+    //   price: transaction.price.toString()
+    // });
   };
 
   // Handle transaction save
   const handleSaveTransaction = () => {
-    if (!editingTransaction.id) return;
+    // if (!editingTransaction.id) return;
 
-    const updatedTransaction = {
-      id: editingTransaction.id,
-      date: editingTransaction.date,
-      symbol: editingTransaction.symbol,
-      action: editingTransaction.action,
-      orderType: editingTransaction.orderType,
-      shares: parseFloat(editingTransaction.shares),
-      price: parseFloat(editingTransaction.price),
-      total: parseFloat(editingTransaction.shares) * parseFloat(editingTransaction.price)
-    };
+    // const updatedTransaction = {
+    //   id: editingTransaction.id,
+    //   date: editingTransaction.date,
+    //   symbol: editingTransaction.symbol,
+    //   action: editingTransaction.action,
+    //   shares: parseFloat(editingTransaction.shares),
+    //   price: parseFloat(editingTransaction.price),
+    //   total: parseFloat(editingTransaction.shares) * parseFloat(editingTransaction.price)
+    // };
 
-    // Update transactions in portfolio data
-    const updatedPortfolioData = portfolioData.map(holding => {
-      if (holding.symbol === updatedTransaction.symbol) {
-        const updatedTransactions = holding.transactions.map(t =>
-          t.id === updatedTransaction.id ? updatedTransaction : t
-        );
-        return {
-          ...holding,
-          transactions: updatedTransactions
-        };
-      }
-      return holding;
-    });
+    // // Update transactions in portfolio data
+    // const updatedPortfolioData = portfolioData.map(holding => {
+    //   if (holding.symbol === updatedTransaction.symbol) {
+    //     const updatedTransactions = holding.transactions.map(t =>
+    //       t.id === updatedTransaction.id ? updatedTransaction : t
+    //     );
+    //     return {
+    //       ...holding,
+    //       transactions: updatedTransactions
+    //     };
+    //   }
+    //   return holding;
+    // });
 
-    setPortfolioData(updatedPortfolioData);
-    setEditingTransaction({ id: null, date: '', symbol: '', action: '', orderType: '', shares: '', price: '' });
+    // setPortfolioData(updatedPortfolioData);
+    // setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' });
   };
 
   // Handle transaction delete
-  const handleDeleteTransaction = (transactionId: string, symbol: string) => {
-    const updatedPortfolioData = portfolioData.map(holding => {
-      if (holding.symbol === symbol) {
-        return {
-          ...holding,
-          transactions: holding.transactions.filter(t => t.id !== transactionId)
-        };
-      }
-      return holding;
-    });
+  const handleDeleteTransaction = (transactionId: number, symbol: string) => {
+    // const updatedPortfolioData = portfolioData.map(holding => {
+    //   if (holding.symbol === symbol) {
+    //     return {
+    //       ...holding,
+    //       transactions: holding.transactions.filter(t => t.id !== Number(transactionId))
+    //     };
+    //   }
+    //   return holding;
+    // });
 
-    setPortfolioData(updatedPortfolioData);
+    // setPortfolioData(updatedPortfolioData);
   };
 
   // Handle add new transaction
   const handleAddTransaction = () => {
-    if (!editingTransaction.symbol || !editingTransaction.shares || !editingTransaction.price) return;
+    // if (!editingTransaction.symbol || !editingTransaction.shares || !editingTransaction.price) return;
 
-    const newTransaction = {
-      id: Date.now().toString(),
-      date: editingTransaction.date,
-      symbol: editingTransaction.symbol.toUpperCase(),
-      action: editingTransaction.action,
-      orderType: editingTransaction.orderType,
-      shares: parseFloat(editingTransaction.shares),
-      price: parseFloat(editingTransaction.price),
-      total: parseFloat(editingTransaction.shares) * parseFloat(editingTransaction.price)
-    };
+    // const newTransaction = {
+    //   id: 1,
+    //   date: editingTransaction.date,
+    //   symbol: editingTransaction.symbol.toUpperCase(),
+    //   action: editingTransaction.action,
+    //   shares: parseFloat(editingTransaction.shares),
+    //   price: parseFloat(editingTransaction.price),
+    //   total: parseFloat(editingTransaction.shares) * parseFloat(editingTransaction.price)
+    // };
 
-    // Update or create holding
-    let updatedPortfolioData = [...portfolioData];
-    const holdingIndex = updatedPortfolioData.findIndex(h => h.symbol === newTransaction.symbol);
+    // // Update or create holding
+    // let updatedPortfolioData = [...portfolioData];
+    // const holdingIndex = updatedPortfolioData.findIndex(h => h.symbol === newTransaction.symbol);
 
-    if (holdingIndex >= 0) {
-      updatedPortfolioData[holdingIndex].transactions.push(newTransaction);
-    } else {
-      updatedPortfolioData.push({
-        symbol: newTransaction.symbol,
-        shares: newTransaction.shares,
-        avgPrice: newTransaction.price,
-        currentPrice: newTransaction.price,
-        totalCost: newTransaction.total,
-        totalValue: newTransaction.total,
-        gainLoss: 0,
-        gainLossPercent: 0,
-        transactions: [newTransaction]
-      });
-    }
+    // if (holdingIndex >= 0) {
+    //   updatedPortfolioData[holdingIndex].transactions.push(newTransaction);
+    // } else {
+    //   updatedPortfolioData.push({
+    //     symbol: newTransaction.symbol,
+    //     shares: newTransaction.shares,
+    //     avgPrice: newTransaction.price,
+    //     currentPrice: newTransaction.price,
+    //     totalCost: newTransaction.total,
+    //     totalValue: newTransaction.total,
+    //     gainLoss: 0,
+    //     gainLossPercent: 0,
+    //     transactions: [newTransaction]
+    //   });
+    // }
 
-    setPortfolioData(updatedPortfolioData);
-    setEditingTransaction({ id: null, date: '', symbol: '', action: '', orderType: '', shares: '', price: '' });
-    setIsAddingTransaction(false);
+    // setPortfolioData(updatedPortfolioData);
+    // setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' });
+    // setIsAddingTransaction(false);
   };
 
   // Sort portfolio data based on selected option
@@ -492,36 +458,22 @@ function PortfolioPage() {
     });
   }, [portfolioData, sortBy]);
 
-  const handleCashConfirm = () => {
-    const numValue = parseFloat(tempCash.replace(/[^\d.-]/g, ''));
-    if (isNaN(numValue)) {
-      setTempCash(availableCash);
-    } else {
-      setAvailableCash(numValue.toFixed(2));
-    }
-    setIsEditingCash(false);
-  };
+  // const handleCashConfirm = () => {
+  //   const numValue = parseFloat(tempCash.replace(/[^\d.-]/g, ''));
+  //   if (isNaN(numValue)) {
+  //     setTempCash(availableCash);
+  //   } else {
+  //     setAvailableCash(numValue.toFixed(2));
+  //   }
+  //   setIsEditingCash(false);
+  // };
 
-  const handleCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^\d.]/g, '');
-    const parts = value.split('.');
-    if (parts.length > 2) return;
-    setTempCash(value);
-  };
-
-  const handleAddAccount = () => {
-    if (newAccountName.trim()) {
-      setAccounts([...accounts, { name: newAccountName, id: Date.now().toString() }]);
-      setNewAccountName('');
-    }
-  };
-
-  const handleDeleteAccount = (id: string) => {
-    setAccounts(accounts.filter(account => account.id !== id));
-    if (selectedAccount === id) {
-      setSelectedAccount('');
-    }
-  };
+  // const handleCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = e.target.value.replace(/[^\d.]/g, '');
+  //   const parts = value.split('.');
+  //   if (parts.length > 2) return;
+  //   setTempCash(value);
+  // };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -549,14 +501,9 @@ function PortfolioPage() {
       {/* Portfolio Holdings */}
       <Paper elevation={3} sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>Portfolio Holdings as of</Typography>
-          <TextField
-            type="date"
-            value={holdingsDate}
-            onChange={(e) => setHoldingsDate(e.target.value)}
-            size="small"
-            sx={{ width: 150 }}
-          />       
+            <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
+            Portfolio Holdings as of {new Date(portfolio.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </Typography>
         </Box>
 
         {/* Holdings Table with Sort */}
@@ -601,6 +548,7 @@ function PortfolioPage() {
             </TableHead>
             <TableBody>
               {sortedPortfolioData.map((holding) => (
+                //FIX HERE LATER
                 <TableRow key={holding.symbol}>
                   <TableCell>{holding.symbol}</TableCell>
                   <TableCell>{holding.shares}</TableCell>
@@ -647,7 +595,7 @@ function PortfolioPage() {
               variant="contained" 
               onClick={() => {
                 setIsAddingTransaction(true);
-                setEditingTransaction({ id: null, date: '', symbol: '', action: '', orderType: '', shares: '', price: '' });
+                setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' });
               }}
             >
               Add Transaction
@@ -684,17 +632,6 @@ function PortfolioPage() {
                   <MenuItem value="Sell">Sell</MenuItem>
                 </Select>
               </FormControl>
-              <FormControl sx={{ flex: 1 }}>
-                <InputLabel>Order Type</InputLabel>
-                <Select
-                  value={editingTransaction.orderType}
-                  label="Order Type"
-                  onChange={(e) => setEditingTransaction({...editingTransaction, orderType: e.target.value})}
-                >
-                  <MenuItem value="Market">Market</MenuItem>
-                  <MenuItem value="Limit">Limit</MenuItem>
-                </Select>
-              </FormControl>
               <TextField
                 label="Shares"
                 type="number"
@@ -728,7 +665,6 @@ function PortfolioPage() {
                 <TableCell>Date</TableCell>
                 <TableCell>Symbol</TableCell>
                 <TableCell>Action</TableCell>
-                <TableCell>Order Type</TableCell>
                 <TableCell>Shares</TableCell>
                 <TableCell>Price</TableCell>
                 <TableCell>Total</TableCell>
@@ -761,16 +697,6 @@ function PortfolioPage() {
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Select
-                          value={editingTransaction.orderType}
-                          onChange={(e) => setEditingTransaction({...editingTransaction, orderType: e.target.value})}
-                          size="small"
-                        >
-                          <MenuItem value="market">Market</MenuItem>
-                          <MenuItem value="limit">Limit</MenuItem>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
                         <TextField
                           type="number"
                           value={editingTransaction.shares}
@@ -797,7 +723,7 @@ function PortfolioPage() {
                           <Button 
                             size="small" 
                             variant="outlined" 
-                            onClick={() => setEditingTransaction({ id: null, date: '', symbol: '', action: '', orderType: '', shares: '', price: '' })}
+                            onClick={() => setEditingTransaction({ id: null, date: '', symbol: '', action: '', shares: '', price: '' })}
                           >
                             Cancel
                           </Button>
@@ -806,10 +732,9 @@ function PortfolioPage() {
                     </>
                   ) : (
                     <>
-                      <TableCell>{transaction.date}</TableCell>
+                      <TableCell>{transaction.date.toLocaleDateString()}</TableCell>
                       <TableCell>{transaction.symbol}</TableCell>
                       <TableCell>{transaction.action}</TableCell>
-                      <TableCell>{transaction.orderType}</TableCell>
                       <TableCell>{transaction.shares}</TableCell>
                       <TableCell>${transaction.price.toFixed(2)}</TableCell>
                       <TableCell>${transaction.total.toFixed(2)}</TableCell>
