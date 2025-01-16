@@ -33,10 +33,10 @@ class Transaction(db.Model):
     portfolio_id = db.Column(db.Integer, db.ForeignKey('portfolio.id'), nullable=False)
     ticker = db.Column(db.String(5), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.now(tz=timezone.utc))
-    trans_type = db.Column(db.Enum('buy','sell',name='trans_type_enum'), nullable=False)
+    action = db.Column(db.Enum('buy','sell',name='trans_type_enum'), nullable=False)
     price = db.Column(db.Float, nullable=False)
     shares = db.Column(db.Integer, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.trans_type}, {self.total_amount})"
+        return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.action}, {self.total_amount})"

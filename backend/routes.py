@@ -111,7 +111,7 @@ def get_user(username):
                 'id' : transaction.id,
                 'ticker' : transaction.ticker,
                 'date' : transaction.date,
-                'type' : transaction.trans_type,
+                'action' : transaction.action,
                 'price' : transaction.price,
                 'shares' : transaction.shares,
                 'total' : transaction.total_amount
@@ -149,7 +149,7 @@ def login():
                 'id' : transaction.id,
                 'ticker' : transaction.ticker,
                 'date' : transaction.date,
-                'type' : transaction.trans_type,
+                'action' : transaction.action,
                 'price' : transaction.price,
                 'shares' : transaction.shares,
                 'total' : transaction.total_amount
@@ -209,6 +209,7 @@ def create_portfolio():
         response_portfolio = {
             'id': new_portfolio.id,
             'name': new_portfolio.name,
+            'date': new_portfolio.date,
             'balance': new_portfolio.balance,
             'last_accessed': new_portfolio.last_accessed.isoformat(),
             'transactions': []
@@ -219,7 +220,7 @@ def create_portfolio():
 
     
 def execute_transaction():
-    required_fields = ['portfolioId', 'ticker', 'date', 'type', 'price', 'shares']
+    required_fields = ['portfolioId', 'ticker', 'date', 'action', 'price', 'shares']
     data = request.json
 
     error, status = utils.verify_fields(data, required_fields)
@@ -230,8 +231,8 @@ def execute_transaction():
         portfolio_id = int(data['portfolioId'])
         ticker = str(data['ticker'])
         date = datetime.strptime(data['date'], '%Y-%m-%d')
-        trans_type = str(data['type'])
-        if trans_type not in ['buy', 'sell']:
+        action = str(data['type'])
+        if action not in ['buy', 'sell']:
             return jsonify({'error': 'Type must be either buy or sell'}), 400
         price = float(data['price'])
         shares = int(data['shares'])
@@ -244,7 +245,7 @@ def execute_transaction():
     if not portfolio:
         return jsonify({'error': 'Portfolio not found'}), 404
     
-    if trans_type == 'buy':
+    if action == 'buy':
         if portfolio.balance < total_amount:
             return jsonify({'error': 'Insufficient funds'}), 400
         portfolio.balance -= total_amount
@@ -259,7 +260,7 @@ def execute_transaction():
             portfolio_id = portfolio_id,
             ticker = ticker,
             date = date,
-            trans_type = trans_type,
+            action = action,
             price = price,
             shares = shares,
             total_amount = total_amount
@@ -292,7 +293,7 @@ def get_transaction_history():
         'ticker': t.ticker,
         'shares': t.shares,
         'price': t.price,
-        'type': t.trans_type,
+        'action': t.action,
         'totalAmount': t.total_amount,
         'date': t.date.strftime('%Y-%m-%d')
     } for t in transactions])
