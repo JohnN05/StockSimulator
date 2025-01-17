@@ -15,7 +15,7 @@ export function TabPanel(props: TabPanelProps) {
             role = "tabpanel"
             hidden={value !== index}
             id={`tabpanel-${index}`}
-            aria-lablledby={`tab-${index}`}
+            aria-labelledby={`tab-${index}`}
             {...other}
         >
             {value === index && <Box sx={{p:3}}>{children}</Box>}
