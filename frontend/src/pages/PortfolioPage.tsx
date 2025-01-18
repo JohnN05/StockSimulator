@@ -30,6 +30,7 @@ import { PortfolioOverview } from '../components/PortfolioOverview';
 import TabPanel from '../components/TabPanel';
 import PortfolioHoldings from '../components/PortfolioHoldings';
 import PortfolioHistory from '../components/PortfolioHistory';
+import TradingPanel from '../components/TradingPanel';
 
 interface EditingTransaction {
   id: number | null;
@@ -210,78 +211,6 @@ function PortfolioPage() {
     dataPoints: []
   });
 
-  // Calculate portfolio value at a given date based on transactions
-  const calculatePortfolioValue = (date: string) => {
-    // const relevantTransactions = sortedTransactions.filter(t => t.date <= date);
-    // const holdings = new Map<string, { shares: number; totalCost: number }>();
-    
-    // relevantTransactions.forEach(t => {
-    //   const current = holdings.get(t.symbol) || { shares: 0, totalCost: 0 };
-    //   if (t.action === 'buy') {
-    //     holdings.set(t.symbol, {
-    //       shares: current.shares + t.shares,
-    //       totalCost: current.totalCost + t.total
-    //     });
-    //   } else {
-    //     holdings.set(t.symbol, {
-    //       shares: current.shares - t.shares,
-    //       totalCost: current.totalCost - (current.totalCost * (t.shares / current.shares))
-    //     });
-    //   }
-    // });
-
-    // return Array.from(holdings.entries()).reduce((total, [symbol, data]) => {
-    //   const stock = portfolioData.find(p => p.symbol === symbol);
-    //   return total + (stock ? data.shares * stock.currentPrice : 0);
-    // }, 0);
-  };
-
-  // Update portfolio performance when date range changes
-  // useEffect(() => {
-  //   if (performancePeriod.startDate && performancePeriod.endDate) {
-  //     const startValue = calculatePortfolioValue(performancePeriod.startDate);
-  //     const endValue = calculatePortfolioValue(performancePeriod.endDate);
-  //     const change = endValue - startValue;
-  //     const changePercent = startValue !== 0 ? (change / startValue) * 100 : 0;
-
-  //     // Generate data points based on interval
-  //     const dataPoints: { date: string; value: number }[] = [];
-  //     let currentDate = new Date(performancePeriod.startDate);
-  //     const endDate = new Date(performancePeriod.endDate);
-
-  //     while (currentDate <= endDate) {
-  //       dataPoints.push({
-  //         date: currentDate.toISOString().split('T')[0],
-  //         value: calculatePortfolioValue(currentDate.toISOString().split('T')[0])
-  //       });
-
-  //       // Increment based on interval
-  //       switch (performancePeriod.interval) {
-  //         case 'day':
-  //           currentDate.setDate(currentDate.getDate() + 1);
-  //           break;
-  //         case 'week':
-  //           currentDate.setDate(currentDate.getDate() + 7);
-  //           break;
-  //         case 'month':
-  //           currentDate.setMonth(currentDate.getMonth() + 1);
-  //           break;
-  //         case 'year':
-  //           currentDate.setFullYear(currentDate.getFullYear() + 1);
-  //           break;
-  //       }
-  //     }
-
-  //     setPortfolioPerformance({
-  //       currentValue: endValue,
-  //       startValue,
-  //       change,
-  //       changePercent,
-  //       dataPoints
-  //     });
-  //   }
-  // }, [performancePeriod, portfolioData, sortedTransactions]);
-
   return (
     <Box sx={{ p: 3 }}>
       
@@ -304,6 +233,9 @@ function PortfolioPage() {
         </TabPanel>
         <TabPanel value={tab} index={1}>
           <PortfolioHistory portfolioReport={portfolioData} />
+        </TabPanel>
+        <TabPanel value={tab} index={2}>
+          {portfolio && <TradingPanel portfolio={portfolio} portfolioReport={portfolioData} />}
         </TabPanel>
       </Paper>
 

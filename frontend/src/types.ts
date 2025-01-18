@@ -15,6 +15,13 @@ export interface Portfolio {
     transactions: Transaction[];
 }
 
+export interface StockData {
+    data: number[];
+    xAxis: {
+      data: string[];
+    };
+}
+
 export interface Transaction {
     id: number;
     ticker: string;
