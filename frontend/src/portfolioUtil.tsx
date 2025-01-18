@@ -47,9 +47,7 @@ export async function getTickerSummary(ticker: string, transactions: Transaction
     transactions.sort((a, b) => b.date.getTime() - a.date.getTime());   //sorts transactions from newest to oldest
 
     const curTicker = await getTickerOnDate(ticker, date);
-    const currentPrice = curTicker ? 
-    (curTicker.Open + curTicker.Close + curTicker.High + curTicker.Low) / 4
-    : 0;
+    const currentPrice = curTicker ? tickerAvgPrice(curTicker) : 0;
 
     const shares = transactions.reduce((totalShares, transaction) => {
         if(transaction.action === 'buy'){
@@ -87,4 +85,8 @@ export async function getPortfolioReport(portfolio: Portfolio): Promise<Ticker[]
         summary.push(tickerSummary);
     }
     return summary;
+}
+
+export function tickerAvgPrice(ticker: TickerInfo): number {
+    return (ticker.Open + ticker.Close + ticker.High + ticker.Low) / 4
 }
