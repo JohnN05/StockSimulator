@@ -98,8 +98,8 @@ export const PortfolioHoldings: React.FC<PortfolioHoldingsProps> = ({ portfolio,
                 </TableRow>
                 </TableHead>
                 <TableBody>
-                {sortedPortfolioData.map((holding) => (
-                    <TickerRow ticker = {holding}/>
+                {sortedPortfolioData.map((ticker) => (
+                    <TickerRow key={ticker.symbol} ticker = {ticker}/>
                 ))}
                 </TableBody>
             </Table>
