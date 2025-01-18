@@ -15,6 +15,12 @@ def initialize_db():
         db.create_all()
         print("Database tables created.")
     
+        #Snippet used to create global account shared by all users
+        default_user = User(username="defaultUser", password="defaultPassword")
+        db.session.add(default_user)
+        db.session.commit()
+        print("Default user created.")
+    
 if __name__ == '__main__': 
     create_database() 
     initialize_db()
