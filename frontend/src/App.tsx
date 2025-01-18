@@ -49,7 +49,7 @@ function App() {
                   Trade
                 </Button>
               </Link>
-              <Link to="/signup" style={{ textDecoration: 'none' }}>
+              {/* <Link to="/signup" style={{ textDecoration: 'none' }}>
                 <Button 
                   color="inherit" 
                   onClick={() => setCurrentPage('signup')}
@@ -78,7 +78,7 @@ function App() {
                 >
                   Sign In
                 </Button>
-              </Link>
+              </Link> */}
             </Box>
           </Toolbar>
         </AppBar>
@@ -89,8 +89,8 @@ function App() {
             <Route path="/account" element={<AccountPage />} />
             <Route path ="/account/:id" element={<PortfolioPage />} />
             <Route path="/trade" element={<TradePage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/signin" element={<SigninPage />} />
+            {/* <Route path="/signup" element={<SignupPage />} />
+            <Route path="/signin" element={<SigninPage />} /> */}
           </Routes>
         </Box>
       </Box>

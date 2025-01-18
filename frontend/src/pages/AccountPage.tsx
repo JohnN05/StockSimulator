@@ -90,7 +90,7 @@ function AccountPage(){
     return (
         <Box sx={{ p:3}}>
             {
-                user ? (
+                user && (
                     <>
                         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
                             <Typography variant="h3" gutterBottom>{`Welcome ${user.username}`}</Typography>
@@ -190,9 +190,6 @@ function AccountPage(){
 
                         </Dialog>
                     </>
-                ):
-                (
-                    <Typography variant="h3" gutterBottom>{`Please sign in`}</Typography>
                 )
             }
             
