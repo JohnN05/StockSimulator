@@ -34,7 +34,7 @@ def search():
         date = datetime.today()
     else:
         try:
-            date = datetime.strptime(date_str, '%Y-%m-%d')
+            date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
         except ValueError:
             return jsonify({"error": "Date must be in the format YYYY-MM-DD"}), 400
     end_date = date + timedelta(days=1)
