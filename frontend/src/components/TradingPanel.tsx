@@ -1,23 +1,26 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Portfolio, StockData, Ticker } from "../types"
-import { Box, TextField, FormControl, InputLabel, Select, MenuItem, Button, Paper, Typography } from "@mui/material";
+import { Box, TextField, FormControl, InputLabel, Select, MenuItem, Button, Paper, Typography, InputAdornment, debounce } from "@mui/material";
 import { LineChart } from "@mui/x-charts";
 import { DatePicker } from "@mui/x-date-pickers";
 import axios from "axios";
+import { tickerAvgPrice } from "../portfolioUtil";
 
 interface TradingPanelProps {
     portfolio : Portfolio
     portfolioReport : Ticker[]
 }
+const BACKEND_URL = 'http://localhost:5002';
 
 export const TradingPanel: React.FC<TradingPanelProps> = ({ portfolio, portfolioReport }) => {
     
     const [tradeForm, setTradeForm] = useState({
-        symbol: '',
+        ticker: '',
         date: new Date(portfolio.date) as Date | null,
         option: '',
         shares: 0,
-        totalAmount: ''
+        price: null as number | null,
+        total: null as number | null
       });
 
     const graphContainerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +63,32 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ portfolio, portfolio
     // }
     };
 
+    async function updatePrice() {
+    if (tradeForm.ticker) {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/api/ticker/search`, {
+          params: {
+            ticker: tradeForm.ticker,
+            date: tradeForm.date
+          }
+        });
+        if (response.status === 200) {
+          const price = tickerAvgPrice(response.data);
+          setTradeForm({ ...tradeForm, price: price, total: price * tradeForm.shares });
+        } else {
+          setTradeForm({ ...tradeForm, price: null, total: null });
+        }
+        // Reset form or show success message
+      } catch (error) {
+        console.error('Error fetching price:', error);
+      }
+    }
+  }
+
+  useEffect(() => {
+    updatePrice();
+  }, [tradeForm.date]);
+
     return (
         <Box>
           <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -67,16 +96,28 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ portfolio, portfolio
               label="Ticker Symbol"
               placeholder="Enter symbol"
               variant="outlined"
-              value={tradeForm.symbol}
-              onChange={e => setTradeForm({...tradeForm, symbol: e.target.value})}
+              value={tradeForm.ticker}
+              onBlur={updatePrice}
+              onChange={e => setTradeForm({...tradeForm, ticker: e.target.value.toUpperCase()})}
+              inputProps={{maxLength: 5}}
               sx={{ flex: 1 }}
             />
             <DatePicker 
                 label="Date" 
                 value={tradeForm.date}
-                onChange={(date) => setTradeForm({...tradeForm, date: date ? date : null})}
+                onChange={(date) => {
+                  setTradeForm({...tradeForm, date: date ? date : null});
+                }}
                 minDate={new Date(portfolio.date)}
                 maxDate={new Date()}
+            />
+            <TextField
+              label="# Shares"
+              type="number"
+              variant="outlined"
+              value={tradeForm.shares}
+              onChange={e => setTradeForm({...tradeForm, shares: Number(e.target.value), total: tradeForm.price !== null ? Number(e.target.value) * tradeForm.price : null})}
+              sx={{ flex: 1 }}
             />
             <FormControl sx={{ flex: 1 }}>
               <InputLabel>Option</InputLabel>
@@ -90,23 +131,30 @@ export const TradingPanel: React.FC<TradingPanelProps> = ({ portfolio, portfolio
                 <MenuItem value="sell">Sell Stock</MenuItem>
               </Select>
             </FormControl>
+            
           </Box>
           <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+
             <TextField
-              label="# Shares"
-              type="number"
+              label="Share Cost"
               variant="outlined"
-              value={tradeForm.shares}
+              value={tradeForm.price !== null ? "$"+tradeForm.price.toFixed(2) : 'N/A'}
               onChange={e => setTradeForm({...tradeForm, shares: Number(e.target.value)})}
               sx={{ flex: 1 }}
+        
+              InputProps={{
+                readOnly: true
+              }}
             />
             <TextField
-              label="Total $"
-              type="number"
+              label="Total Cost"
               variant="outlined"
-              value={tradeForm.totalAmount}
-              onChange={e => setTradeForm({...tradeForm, totalAmount: e.target.value})}
+              value={tradeForm.total !== null ? "$"+tradeForm.total.toFixed(2) : 'N/A'}
+              onChange={e => setTradeForm({...tradeForm, total: Number(e.target.value)})}
               sx={{ flex: 1 }}
+              InputProps={{
+                readOnly: true
+               }}
             />
             <Button 
               variant="contained" 
