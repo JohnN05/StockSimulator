@@ -57,4 +57,5 @@ export interface TickerInfo {
 export interface UserContextType {
     user: User | null;
     setUser: (user: User | null) => void;
+    updatePortfolio: (updatedPortfolio: Portfolio) => void;
 }

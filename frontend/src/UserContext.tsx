@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User, UserContextType } from './types';
+import { Portfolio, User, UserContextType } from './types';
 import axios from 'axios';
 
 export const UserContext = React.createContext<UserContextType | undefined>(undefined);
@@ -56,10 +56,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         signIn();
     }, []);
 
-    //SNIPPET ENDS HERE
+    const updatePortfolio = (updatedPortfolio: Portfolio) => {
+        if(user){
+            const updatedUser = {
+                ...user,
+                portfolios: user.portfolios.map(portfolio => 
+                    portfolio.id === updatedPortfolio.id ? updatedPortfolio : portfolio
+                )
+            };
+            setUser(updatedUser);
+        }
+    }
 
     return (
-        <UserContext.Provider value={{user, setUser}}>
+        <UserContext.Provider value={{user, setUser, updatePortfolio}}>
             {children}
         </UserContext.Provider>
     );
