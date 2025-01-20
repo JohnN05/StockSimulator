@@ -265,7 +265,6 @@ def execute_transaction():
             return jsonify({'error': 'Insufficient shares'}), 400
         portfolio.balance += total_amount
 
-    
     try:
         transaction = Transaction(
             portfolio_id = portfolio_id,
