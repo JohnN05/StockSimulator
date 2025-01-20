@@ -62,7 +62,6 @@ const userContext = useContext(UserContext);
 
   const handleTradeSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  console.log(tradeForm);
   const ticker = tradeForm.ticker;
   const date = tradeForm.date;
   const action = tradeForm.action;

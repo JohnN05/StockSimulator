@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Portfolio, Ticker, TickerInfo, Transaction } from "./types";
+import { OverviewData, Portfolio, Ticker, TickerInfo, Transaction } from "./types";
 
 const BACKEND_URL = 'http://localhost:5002';
 
@@ -91,4 +91,16 @@ export async function getPortfolioReport(portfolio: Portfolio): Promise<Ticker[]
 
 export function tickerAvgPrice(ticker: TickerInfo): number {
     return (ticker.Open + ticker.Close + ticker.High + ticker.Low) / 4
+}
+
+export function getOverviewData(tickers: Ticker[]): OverviewData{
+    const [totalValue, totalSpent] = tickers.reduce(
+        ([totalPrice, totalSpent], ticker) => [
+            totalPrice + ticker.totalValue,
+            totalSpent + ticker.totalCost,
+        ], [0, 0]
+    );
+    const totalReturn = totalValue - totalSpent;
+    const totalReturnPerc = (totalValue - totalSpent) / totalSpent * 100;
+    return { totalValue, totalReturn, totalReturnPerc };
 }

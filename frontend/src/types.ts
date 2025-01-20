@@ -59,3 +59,9 @@ export interface UserContextType {
     setUser: (user: User | null) => void;
     updatePortfolio: (updatedPortfolio: Portfolio) => void;
 }
+
+export interface OverviewData{ 
+    totalValue: number; 
+    totalReturn: number; 
+    totalReturnPerc: number 
+}

@@ -1,50 +1,27 @@
-import React, { useState, useMemo, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Box, 
   Button, 
   TextField, 
   Typography, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
   Paper,
-  IconButton,
   Tabs,
   Tab,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../UserContext';
-import { getPortfolioReport } from '../portfolioUtil';
-import { Portfolio, Ticker, Transaction } from '../types';
+import { getOverviewData, getPortfolioReport } from '../portfolioUtil';
+import { OverviewData, Portfolio, Ticker } from '../types';
 import { PortfolioOverview } from '../components/PortfolioOverview';
 import TabPanel from '../components/TabPanel';
 import PortfolioHoldings from '../components/PortfolioHoldings';
 import PortfolioHistory from '../components/PortfolioHistory';
 import TradingPanel from '../components/TradingPanel';
-
-interface EditingTransaction {
-  id: number | null;
-  date: string;
-  symbol: string;
-  action: string;
-  shares: string;
-  price: string;
-}
-
-interface Account {
-  name: string;
-  id: string;
-}
 
 function PortfolioPage() {
   const userContext = useContext(UserContext);
@@ -60,7 +37,8 @@ function PortfolioPage() {
   };
 
   const [portfolio, setPortfolio] = useState<Portfolio | undefined>(getPortfolioById(id));
-  const [portfolioReport, setPortfolioReport] = useState<Ticker[]>([]);
+  const [tickerReport, setTickerReport] = useState<Ticker[]>([]);
+  const [overviewData, setOverviewData] = useState<OverviewData>({totalValue: 0, totalReturn: 0, totalReturnPerc: 0});
 
   useEffect(() => {
     setPortfolio(getPortfolioById(id));
@@ -70,7 +48,8 @@ function PortfolioPage() {
         navigate('/account')
       } else {
           getPortfolioReport(portfolio).then(report => {
-            setPortfolioReport(report);
+            setTickerReport(report);
+            setOverviewData(getOverviewData(report));
           });
       }
   }, [portfolio])
@@ -103,11 +82,11 @@ function PortfolioPage() {
       
 
       {/* Account Summary */}
-      {portfolio && <PortfolioOverview portfolio={portfolio} />}
+      {portfolio && <PortfolioOverview portfolio={portfolio} overviewData={overviewData}/>}
       <Paper elevation={3} sx={{ p: 3, mb : 3 }}>
         <Tabs 
           value = {tab}
-          onChange={(event: React.SyntheticEvent, newTab: number) => {
+          onChange={(_event: React.SyntheticEvent, newTab: number) => {
             setTab(newTab)
           }}
         >
@@ -116,13 +95,13 @@ function PortfolioPage() {
           <Tab label="Trade" value={2} />
         </Tabs>
         <TabPanel value={tab} index={0}>
-          {portfolio && <PortfolioHoldings portfolio={portfolio} portfolioReport={portfolioReport} />}
+          {portfolio && <PortfolioHoldings portfolio={portfolio} portfolioReport={tickerReport} />}
         </TabPanel>
         <TabPanel value={tab} index={1}>
-          <PortfolioHistory portfolioReport={portfolioReport} />
+          <PortfolioHistory portfolioReport={tickerReport} />
         </TabPanel>
         <TabPanel value={tab} index={2}>
-          {portfolio && <TradingPanel portfolio={portfolio} portfolioReport={portfolioReport} />}
+          {portfolio && <TradingPanel portfolio={portfolio} portfolioReport={tickerReport} />}
         </TabPanel>
       </Paper>
 
