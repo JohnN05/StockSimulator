@@ -46,7 +46,7 @@ function groupTransactionsByTicker(transactions:Transaction[]): Record<string, T
 }
 
 export async function getTickerSummary(ticker: string, transactions: Transaction[], date: Date): Promise<Ticker> {
-    transactions.sort((a, b) => b.date.getTime() - a.date.getTime());   //sorts transactions from newest to oldest
+    transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());   //sorts transactions from newest to oldest
 
     const curTicker = await getTickerOnDate(ticker, date);
     const currentPrice = curTicker ? tickerAvgPrice(curTicker) : 0;
