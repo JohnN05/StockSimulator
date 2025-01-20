@@ -18,14 +18,16 @@ function calculateTotalCost(transactions: Transaction[], shares: number): number
         return totalCost
 }
 
-async function getTickerOnDate(ticker:String, date:Date): Promise<TickerInfo | undefined>{
-    try{
-        const response = await axios.post(`${BACKEND_URL}/api/portfolio/create`, {
-            ticker,
-            date
+async function getTickerOnDate(ticker: String, date: Date): Promise<TickerInfo | undefined> {
+    try {
+        const response = await axios.get(`${BACKEND_URL}/api/ticker/search`, {
+            params: {
+                ticker,
+                date: new Date(date)
+            }
         });
-        if (response.status === 200 || response.status === 201){
-            return response.data as TickerInfo
+        if (response.status === 200 || response.status === 201) {
+            return response.data as TickerInfo;
         }
     } catch (error) {
         console.error(`Failed to fetch ${ticker} on ${date}`, error);
