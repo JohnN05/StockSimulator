@@ -23,6 +23,7 @@ const parseUser = (user: any): User => ({
             last_accessed: new Date(portfolio.last_accessed),
             transactions: portfolio.transactions.map((transaction: any) => ({
                 id: transaction.id,
+                action: transaction.action,
                 ticker: transaction.ticker,
                 date: new Date(transaction.date),
                 price: transaction.price,
