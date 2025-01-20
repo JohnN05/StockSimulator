@@ -39,4 +39,4 @@ class Transaction(db.Model):
     total_amount = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f"Transaction('{self.originator.id}', {self.ticker}, {self.date}, {self.action}, {self.total_amount})"
+        return f"Transaction('{self.portfolio_id}', {self.ticker}, {self.date}, {self.action}, {self.total_amount})"

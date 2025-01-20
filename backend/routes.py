@@ -220,6 +220,11 @@ def create_portfolio():
 
     
 def execute_transaction():
+    try:
+        username = utils.authenticate_header(request.headers)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 401
+
     required_fields = ['portfolioId', 'ticker', 'date', 'action', 'price', 'shares']
     data = request.json
 
@@ -227,11 +232,13 @@ def execute_transaction():
     if error:
         return jsonify(error), status
 
+    user = User.query.filter_by(username=username).first()
+
     try:
         portfolio_id = int(data['portfolioId'])
         ticker = str(data['ticker'])
-        date = datetime.strptime(data['date'], '%Y-%m-%d')
-        action = str(data['type'])
+        date = datetime.strptime(data['date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        action = str(data['action'])
         if action not in ['buy', 'sell']:
             return jsonify({'error': 'Type must be either buy or sell'}), 400
         price = float(data['price'])
@@ -244,7 +251,10 @@ def execute_transaction():
     portfolio = Portfolio.query.get(portfolio_id)
     if not portfolio:
         return jsonify({'error': 'Portfolio not found'}), 404
+    elif portfolio.user_id != user.id:
+        return jsonify({'error': f"Portfolio doesn't belong to {user.username}"}), 404
     
+    portfolio.date = date
     if action == 'buy':
         if portfolio.balance < total_amount:
             return jsonify({'error': 'Insufficient funds'}), 400
@@ -255,6 +265,7 @@ def execute_transaction():
             return jsonify({'error': 'Insufficient shares'}), 400
         portfolio.balance += total_amount
 
+    
     try:
         transaction = Transaction(
             portfolio_id = portfolio_id,
@@ -265,14 +276,34 @@ def execute_transaction():
             shares = shares,
             total_amount = total_amount
         )
-
+        
         db.session.add(transaction)
         db.session.commit()
+
+        updated_portfolio = {
+        'id': portfolio.id,
+        'name': portfolio.name,
+        'balance': portfolio.balance,
+        'date': portfolio.date,
+        'last_accessed': portfolio.last_accessed.isoformat(),
+        'transactions': [
+            {
+                'id': t.id,
+                'ticker': t.ticker,
+                'date': t.date.isoformat(),
+                'price': t.price,
+                'shares': t.shares,
+                'total': t.total_amount,
+                'action': t.action
+            } for t in portfolio.transactions
+        ]
+        };
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-    return jsonify({"message": 'Transaction has been processed'}), 200
+    return jsonify(updated_portfolio), 201
 
 def get_transaction_history():
     required_fields = ['portfolioId']
