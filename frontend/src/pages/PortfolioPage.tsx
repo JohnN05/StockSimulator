@@ -60,135 +60,22 @@ function PortfolioPage() {
   };
 
   const [portfolio, setPortfolio] = useState<Portfolio | undefined>(getPortfolioById(id));
-  const [portfolioReport, setPortfolioReport] = useState(portfolio ? getPortfolioReport(portfolio) : {});
+  const [portfolioReport, setPortfolioReport] = useState<Ticker[]>([]);
 
+  useEffect(() => {
+    setPortfolio(getPortfolioById(id));
+  }, [user])
   useEffect(() => {
       if (!portfolio){
         navigate('/account')
       } else {
-          setPortfolioReport(getPortfolioReport(portfolio));
+          getPortfolioReport(portfolio).then(report => {
+            setPortfolioReport(report);
+          });
       }
   }, [portfolio])
 
   const [tab, setTab] = useState<number>(0);
-
-  // Mock Portfolio Data 
-  const [portfolioData, setPortfolioData] = useState<Ticker[]>([
-    {
-      symbol: 'AAPL',
-      shares: 10,
-      avgPrice: 100.00,
-      currentPrice: 110.00,
-      totalCost: 1000.00,
-      totalValue: 1100.00,
-      gainLoss: 100.00,
-      gainLossPercent: 10.00,
-      transactions: [
-        {
-          id: 1,
-          date: new Date('2023-12-15'),
-          ticker: 'AAPL',
-          action: 'buy',
-          shares: 5,
-          price: 100.00,
-          total: 500.00
-        },
-        {
-          id: 2,
-          date: new Date('2023-12-20'),
-          ticker: 'AAPL',
-          action: 'buy',
-          shares: 5,
-          price: 100.00,
-          total: 500.00
-        }
-      ]
-    },
-    {
-      symbol: 'MSFT',
-      shares: 5,
-      avgPrice: 100.00,
-      currentPrice: 90.00,
-      totalCost: 500.00,
-      totalValue: 450.00,
-      gainLoss: -50.00,
-      gainLossPercent: -10.00,
-      transactions: [
-        {
-          id: 3,
-          date: new Date('2023-12-10'),
-          ticker: 'MSFT',
-          action: 'buy',
-          shares: 5,
-          price: 100.00,
-          total: 500.00
-        }
-      ]
-    },
-    {
-      symbol: 'GOOGL',
-      shares: 1,
-      avgPrice: 1000.00,
-      currentPrice: 1100.00,
-      totalCost: 1000.00,
-      totalValue: 1100.00,
-      gainLoss: 100.00,
-      gainLossPercent: 10.00,
-      transactions: [
-        {
-          id: 4,
-          date: new Date('2023-12-05'),
-          ticker: 'GOOGL',
-          action: 'buy',
-          shares: 1,
-          price: 1000.00,
-          total: 1000.00
-        }
-      ]
-    },
-    {
-      symbol: 'META',
-      shares: 2,
-      avgPrice: 10.00,
-      currentPrice: 8.00,
-      totalCost: 20.00,
-      totalValue: 16.00,
-      gainLoss: -4.00,
-      gainLossPercent: -20.00,
-      transactions: [
-        {
-          id: 5,
-          date: new Date('2023-12-01'),
-          ticker: 'META',
-          action: 'buy',
-          shares: 2,
-          price: 10.00,
-          total: 20.00
-        }
-      ]
-    },
-    {
-      symbol: 'TSLA',
-      shares: 5,
-      avgPrice: 10.00,
-      currentPrice: 15.00,
-      totalCost: 50.00,
-      totalValue: 75.00,
-      gainLoss: 25.00,
-      gainLossPercent: 50.00,
-      transactions: [
-        {
-          id: 6,
-          date: new Date('2023-12-25'),
-          ticker: 'TSLA',
-          action: 'buy',
-          shares: 5,
-          price: 10.00,
-          total: 50.00
-        }
-      ]
-    }
-  ]);
 
   // Portfolio performance state
   const [performancePeriod, setPerformancePeriod] = useState({
@@ -229,13 +116,13 @@ function PortfolioPage() {
           <Tab label="Trade" value={2} />
         </Tabs>
         <TabPanel value={tab} index={0}>
-          {portfolio && <PortfolioHoldings portfolio={portfolio} portfolioReport={portfolioData} />}
+          {portfolio && <PortfolioHoldings portfolio={portfolio} portfolioReport={portfolioReport} />}
         </TabPanel>
         <TabPanel value={tab} index={1}>
-          <PortfolioHistory portfolioReport={portfolioData} />
+          <PortfolioHistory portfolioReport={portfolioReport} />
         </TabPanel>
         <TabPanel value={tab} index={2}>
-          {portfolio && <TradingPanel portfolio={portfolio} portfolioReport={portfolioData} />}
+          {portfolio && <TradingPanel portfolio={portfolio} portfolioReport={portfolioReport} />}
         </TabPanel>
       </Paper>
 

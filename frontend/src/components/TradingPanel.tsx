@@ -56,7 +56,7 @@ const userContext = useContext(UserContext);
   }, []);
 
   const validSell = (symbol:String, shares:number):boolean => {
-    const ticker = portfolioReport.find((cur) => {cur.symbol == symbol});
+    const ticker = portfolioReport.find((cur) => cur.symbol == symbol);
     return ticker ? ticker.shares >= shares : false;
   }
 

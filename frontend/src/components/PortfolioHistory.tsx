@@ -201,7 +201,7 @@ export const PortfolioHistory: React.FC<PortfolioHistoryProps> = ({ portfolioRep
                         </>
                     ) : (
                         <>
-                        <TableCell>{transaction.date.toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
                         <TableCell>{transaction.symbol}</TableCell>
                         <TableCell>{transaction.action}</TableCell>
                         <TableCell>{transaction.shares}</TableCell>
