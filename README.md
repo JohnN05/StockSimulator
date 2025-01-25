@@ -1,6 +1,15 @@
 # Stock Simulator
 
-A web-based stock market simulator that allows users to practice trading with virtual money and real-time market data.
+##Overview
+This web-based stock market simulator provides users with an immersive platform to practice trading using virtual money and real-time market data. Powered by yFinance, the simulator supports creating multiple portfolios across different dates, offering insights into individual portfolio performance.
+
+# Features
+- Virtual trading personal portfolios
+- Historical performance tracking
+- User authentication and account management
+
+# Installation Instructions
+Follow these steps to setup and run the frontend and backend of the stock simulator.
 
 ## Prerequisites
 
@@ -80,13 +89,13 @@ python app.py
 
 Note: The backend serves the frontend from the `dist` directory, so make sure to run `npm run build` in the frontend directory before starting the backend server.
 
-## Features
-- Real-time stock data visualization
-- Virtual trading with mock portfolio
-- Historical performance tracking
-- User authentication and account management
-
 ## Technologies Used
 - Frontend: React, TypeScript, Material-UI, TailwindCSS
 - Backend: Python, Flask, SQLAlchemy
 - Data: Real-time stock market data via various financial APIs
+
+## Authors
+
+[JohnN05](https://github.com/JohnN05) - Developer
+[vincenthuang0908](https://github.com/vincenthuang0908) - Developer
+
