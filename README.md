@@ -1,6 +1,6 @@
 # Stock Simulator
 
-##Overview
+## Overview
 This web-based stock market simulator provides users with an immersive platform to practice trading using virtual money and real-time market data. Powered by yFinance, the simulator supports creating multiple portfolios across different dates, offering insights into individual portfolio performance.
 
 # Features
