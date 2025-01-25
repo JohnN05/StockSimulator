@@ -97,5 +97,6 @@ Note: The backend serves the frontend from the `dist` directory, so make sure to
 ## Authors
 
 [JohnN05](https://github.com/JohnN05) - Developer
+
 [vincenthuang0908](https://github.com/vincenthuang0908) - Developer
 
